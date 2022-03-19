@@ -4,8 +4,8 @@ import psycopg2
 from psycopg2 import OperationalError
 
 from models_manager.manager.exeptions import DatabaseNameError
+from models_manager.settings import DATABASE, DATABASES, DATABASE_LOGGING
 from models_manager.utils import retry
-from settings import DATABASE, DATABASE_LOGGING, DATABASES
 
 logging.basicConfig(level=logging.INFO)
 

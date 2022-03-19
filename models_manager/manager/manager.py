@@ -30,7 +30,7 @@ class ModelManager:
         self.__resolve_attrs(**kwargs)
 
         self._database = kwargs.get('database')
-        self._query = getattr(connection, self._database)
+        self._query = None if self._database is None else getattr(connection, self._database)
 
     def __resolve_attrs(self, **kwargs):
         """

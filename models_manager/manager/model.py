@@ -1,7 +1,7 @@
 from functools import reduce
 from typing import Union
 
-from models_manager.json_manager import JsonManager
+from models_manager.manager.manager import ModelManager
 
 
 class Meta(type):
@@ -10,7 +10,7 @@ class Meta(type):
         safe_attrs = mcs.resolve_attrs(bases, attrs)
 
         cls = type.__new__(mcs, name, bases, attrs)
-        cls.manager = JsonManager(safe_name, bases, **safe_attrs)
+        cls.manager = ModelManager(safe_name, bases, **safe_attrs)
 
         return cls
 
@@ -55,4 +55,6 @@ class Meta(type):
 
 
 class Model(metaclass=Meta):
+    database = None
+    identity = 'id'
     extended_by = None
