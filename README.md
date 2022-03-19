@@ -18,8 +18,17 @@ class User(Model):
     password = Field(default='other', json='password', max_length=255)
 
 
-payload = User.manager.to_json
-print(payload)
+json = User.manager.to_json
+print(json)
+
+json_negative = User.manager.to_negative_json()
+print(json_negative)
+
+user_schema = User.manager.to_schema
+print(user_schema)
+
+user_array_schema = User.manager.to_array_schema
+print(user_array_schema)  
 ```
 
 ### Working with databases:
@@ -39,4 +48,21 @@ models_manager.settings.DATABASE = {
 
 models_manager.settings.DATABASES = ['some', 'other', 'another']
 models_manager.settings.DATABASE_LOGGING = True
+```
+
+Then in your model you have to override `database` and `identity` attributes
+
+```python
+from models_manager.manager.field import Field
+from models_manager.manager.model import Model
+
+
+class User(Model):
+    database = 'some'
+    identity = 'id'
+    
+    id = Field(default=1, json='id', category=int)
+    email = Field(default='some@gmail.com', json='email', max_length=255)
+    username = Field(default='some', json='username', null=True, max_length=255)
+    password = Field(default='other', json='password', max_length=255)
 ```
