@@ -7,7 +7,7 @@ requirements = ['pydantic', 'Faker', 'psycopg2-binary']
 
 setup(
     name="models_manager",
-    version="0.3.2",
+    version="0.3.3",
     author="Nikita Filonov",
     author_email="filonov.nikitkaa@gmail.com",
     description="Models Manager",
