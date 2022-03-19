@@ -1,7 +1,7 @@
 from typing import Union, Type, Dict, List, Callable
 
 from models_manager.constants import TYPE_NAMES
-from models_manager.exeptions import FieldException
+from models_manager.manager.exeptions import FieldException
 from models_manager.providers.context import ProviderContext
 from models_manager.providers.provider import CommonProvider, Provider
 
