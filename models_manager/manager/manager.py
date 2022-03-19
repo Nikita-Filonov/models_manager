@@ -132,7 +132,7 @@ class ModelManager:
                 type(self._model, self._mro, {**self.__dict__, **(row or {})})()
                 for row in result
             ]
-            return QuerySet(self._model, self._identity, self._query, self._mro, instances)
+            return QuerySet(self._model, self._identity, self._lazy_query, self._mro, instances)
 
         return type(self._model, self._mro, {**self.__dict__, **(result or {})})()
 
