@@ -1,8 +1,8 @@
 import logging
 from typing import Dict, List, Union, Tuple
 
-from manager.field import Field
-from manager.providers.provider import Provider
+from models_manager.field import Field
+from models_manager.providers.provider import Provider
 
 
 class JsonManager:

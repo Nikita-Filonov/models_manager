@@ -1,7 +1,7 @@
 from functools import reduce
 from typing import Union
 
-from manager.json_manager import JsonManager
+from models_manager.json_manager import JsonManager
 
 
 class Meta(type):

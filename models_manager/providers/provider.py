@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from manager.providers.context import ProviderContext
-from manager.utils import random_dict, random_string, random_list, random_number
+from models_manager.providers.context import ProviderContext
+from models_manager.utils import random_dict, random_string, random_list, random_number
 
 
 class Provider(ABC):
