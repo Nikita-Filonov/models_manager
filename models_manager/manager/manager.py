@@ -30,7 +30,10 @@ class ModelManager:
         self.__resolve_attrs(**kwargs)
 
         self._database = kwargs.get('database')
-        self._query = None if self._database is None else getattr(connection, self._database)
+
+    @property
+    def _lazy_query(self):
+        return getattr(connection, self._database, None)
 
     def __resolve_attrs(self, **kwargs):
         """
@@ -350,7 +353,7 @@ class ModelManager:
             bind = ' AND '.join([f'"{model}"."{field}" = %s' for field in kwargs])
             sql += f' WHERE {bind};'
 
-        cursor = self._query(sql, values)
+        cursor = self._lazy_query(sql, values)
         result = serializer(cursor, many=False)
 
         if not result:
@@ -369,7 +372,7 @@ class ModelManager:
 
         sql = f'INSERT INTO "{model}" ({dump_fields(fields)}) VALUES ({binding(values)}) RETURNING *;'
 
-        cursor = self._query(sql, values)
+        cursor = self._lazy_query(sql, values)
         result = serializer(cursor)
 
         return self.__as_json(as_json, result)
@@ -385,7 +388,7 @@ class ModelManager:
         """
         model = normalize_model(self._model)
         sql = f'DELETE FROM "{model}" WHERE "{model}"."{self._identity}" = %s;'
-        self._query(sql, (self.__dict__[self._identity],))
+        self._lazy_query(sql, (self.__dict__[self._identity],))
 
     def update(self, as_json=True, **kwargs):
         """
@@ -408,7 +411,7 @@ class ModelManager:
 
         sql = f'UPDATE "{model}" SET {values} WHERE "{model}"."{self._identity}" = %s RETURNING*;'
 
-        cursor = self._query(sql, (self.__dict__[self._identity],))
+        cursor = self._lazy_query(sql, (self.__dict__[self._identity],))
         result = serializer(cursor)
 
         return self.__as_json(as_json, result)
@@ -433,7 +436,7 @@ class ModelManager:
                 logging.warning(f'Values is empty {values}({type(values)}). Nothing to query')
                 return self.__as_json(as_json, [])
 
-        cursor = self._query(sql, values)
+        cursor = self._lazy_query(sql, values)
         result = serializer(cursor, many=True)
 
         return self.__as_json(as_json, result)
@@ -456,7 +459,7 @@ class ModelManager:
         if kwargs:
             sql += where(model, operand, operator, **kwargs)
 
-        cursor = self._query(sql, values)
+        cursor = self._lazy_query(sql, values)
         return bool(cursor.fetchall())
 
     def get_or_create(self, as_json=True, **kwargs):

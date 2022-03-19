@@ -1,10 +1,11 @@
 import logging
+from typing import Optional
 
 import psycopg2
 from psycopg2 import OperationalError
 
 from models_manager.manager.exeptions import DatabaseNameError
-from models_manager.settings import DATABASE, DATABASES, DATABASE_LOGGING
+from models_manager.settings import DATABASE_LOGGING
 from models_manager.utils import retry
 
 logging.basicConfig(level=logging.INFO)
@@ -68,14 +69,16 @@ class Connect:
     some('SELECT * FROM "Users"')
     """
 
-    def __init__(self, dbname=None):
-        self._setting = DATABASE
-        self._databases = DATABASES
+    def __init__(self, dbname=None, is_lazy=True):
         self.__context_dbname = dbname
 
-        self._setup_connections(dbname)
+        if not is_lazy:
+            self._setup_connections(dbname)
 
     def __getattr__(self, item):
+        if not self.__dict__.get('_connections'):
+            self._setup_connections()
+
         connection = self._connections[item]
         cursor = self._cursors[item]
         return QueryManager(connection, cursor).query
@@ -93,8 +96,9 @@ class Connect:
         self._cursors[self.__context_dbname].close()
 
     @retry(times=10, exceptions=(OperationalError,))
-    def _setup_connections(self, dbname):
+    def _setup_connections(self, dbname: Optional[str] = None):
         """Setting up connections to multiple databases"""
-        databases = self._databases if dbname is None else [dbname]
-        self._connections = {db: psycopg2.connect(**{**self._setting, 'dbname': db}) for db in databases}
+        from models_manager.settings import DATABASES, DATABASE
+        databases = DATABASES if dbname is None else [dbname]
+        self._connections = {db: psycopg2.connect(**{**DATABASE, 'dbname': db}) for db in databases}
         self._cursors = {db: conn.cursor() for conn, db in zip(self._connections.values(), databases)}
