@@ -1,7 +1,11 @@
+from models_manager.connect import Connect
+from models_manager.manager.field import Field
+from models_manager.manager.model import Model
+from models_manager.providers.provider import Provider
+
 __all__ = [
-    'field',
-    'model',
-    'manager',
-    'providers',
-    'connect'
+    'Field',
+    'Model',
+    'Connect',
+    'Provider'
 ]
