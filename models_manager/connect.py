@@ -5,7 +5,6 @@ import psycopg2
 from psycopg2 import OperationalError
 
 from models_manager.manager.exeptions import DatabaseNameError
-from models_manager.settings import DATABASE_LOGGING
 from models_manager.utils import retry
 
 logging.basicConfig(level=logging.INFO)
@@ -19,7 +18,6 @@ class QueryManager:
     def __init__(self, connection, cursor):
         self._connection = connection
         self._cursor = cursor
-        self._logging = DATABASE_LOGGING
 
     def query(self, query, args=()):
         """
@@ -29,7 +27,8 @@ class QueryManager:
         This method also has included logger, so we can see executed queries.
         To turn off logging queries, change DATABASE_LOGGING to False, in settings.py
         """
-        if self._logging:
+        from models_manager.settings import DATABASE_LOGGING
+        if DATABASE_LOGGING:
             logging.info(query % args if isinstance(args, tuple) else tuple(args))
 
         try:
