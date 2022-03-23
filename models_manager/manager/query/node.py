@@ -4,6 +4,21 @@ from models_manager.manager.query.builder import template_to_query
 
 
 class Q:
+    """
+    Class which implements interface for making complicated queries
+    using bitwise operators
+
+    Currently supported only &, | operators
+
+    Example:
+        MyModel.manager.filter(Q(name_in=('some', 'other') | Q(id__in=(1, 2, 3))))
+        MyModel.manager.filter(Q(name_in=('some', 'other') & Q(id__in=(1, 2, 3))))
+        MyModel.manager.filter(
+            Q(name_in=('some', 'other')) &
+            Q(id__in=(1, 2, 3)) |
+            Q(username__in=('some', 'other'))
+        )
+    """
     AND = 'AND'
     OR = 'OR'
     default = AND
@@ -17,10 +32,20 @@ class Q:
     def defined_query(self):
         return self._defined_query
 
-    def to_query(self):
+    def to_query(self) -> str:
+        """Used to convert dict of passed template fields to the SQL query string"""
         return f' {self.default} '.join([template_to_query(key, value) for key, value in self._query.items()])
 
     def resolve_query(self, node: Optional['Q'], operator: str):
+        """
+        Used to resolve query for operators
+
+        If ``_defined_query`` is None, then we are going to calculate the query for
+        current object and for other Q object query.
+
+        If ``_defined_query`` is not None, then we are getting cached ``_defined_query`` and
+        joinigng it with other Q object query.
+        """
         if self._defined_query is None:
             self_query, other_query = self.to_query(), node.to_query()
             self._defined_query = f'{self_query} {operator} {other_query}'
