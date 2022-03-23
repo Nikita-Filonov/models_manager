@@ -91,10 +91,7 @@ def serializer(cursor, many=False):
     {'id': 1, 'name': 'some_name', 'email': 'some_email@mail.com'}.
     """
     columns = [column[0] for column in cursor.description]
-    result = [
-        dict(zip(columns, row))
-        for row in cursor.fetchall()
-    ]
+    result = [dict(zip(columns, row)) for row in cursor.fetchall()]
     if many:
         return result
 
@@ -160,8 +157,9 @@ def normalize_model(model) -> str:
     return '_'.join([part.lower() for part in model_parts])
 
 
-def where(model, operand='AND', operator='=', **kwargs) -> str:
+def where(model, operand='AND', operator='=', start='WHERE', **kwargs) -> str:
     """
+    :param start: WHERE, AND, OR
     :param model: Name of database table
     :param operand: Logic operand like 'AND', 'OR' etc.
     :param operator: Operator like '=', '<', '>' etc.
@@ -171,4 +169,4 @@ def where(model, operand='AND', operator='=', **kwargs) -> str:
     Will return formatted where query
     """
     bind = f' {operand} '.join([f'"{model}"."{field}" {operator} %s' for field in kwargs])
-    return f' WHERE {bind};'
+    return f' {start} {bind};'

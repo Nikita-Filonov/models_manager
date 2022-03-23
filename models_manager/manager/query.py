@@ -1,7 +1,7 @@
 import logging
 
 from models_manager.manager.exeptions import ModelOperationError, QuerySetOperationError
-from models_manager.utils import serializer, normalize_model, binding, dump_value
+from models_manager.utils import serializer, normalize_model, binding, dump_value, where
 
 
 class QuerySet:
@@ -119,4 +119,38 @@ class QuerySet:
         cursor = self._query(sql, self.__map_to_identity)
         result = serializer(cursor, many=True)
 
+        return self.__as_query_set(as_query_set, result)
+
+    def filter(self, as_query_set: bool = True, operand='AND', operator='=', **kwargs):
+        """
+        Used to chain multiple select queries
+
+        Example:
+            class Users(Model):
+                database = 'users'
+                identity = 'user_id'
+
+                id = Field(default=uuid.uuid4, category=str, json='id')
+                email = Field(default=random_string, json='email', max_length=200, category=str)
+
+            Users.manager.filter(id=(1, 2, 3,), operand='IN', as_json=False).filter(email='some@gmail.com')
+
+            It will make 2 queries:
+            SELECT * FROM "users" WHERE "users"."id" IN (1, 2, 3); -> for example returned 2 users
+            SELECT * FROM "users" WHERE "users"."id" IN (1, 2) AND "users"."email" = some@gmail.com;
+        """
+        if not self._instances:
+            logging.warning('QuerySet is empty nothing to update. Canceling')
+            return []
+
+        model = normalize_model(self._model)
+        bind = binding(self._instances)
+        sql = f'SELECT * FROM "{model}" WHERE "{model}"."{self._identity}" IN ({bind})'
+        values = tuple(kwargs.values())
+
+        if kwargs:
+            sql += where(model, operand, operator, 'AND', **kwargs)
+
+        cursor = self._query(sql, (*self.__map_to_identity, *values))
+        result = serializer(cursor, many=True)
         return self.__as_query_set(as_query_set, result)
