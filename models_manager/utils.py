@@ -4,6 +4,7 @@ import re
 from random import choice, randint
 from string import ascii_letters, digits
 from time import sleep
+from typing import Union
 
 from faker import Faker
 
@@ -123,7 +124,7 @@ def dump_fields(fields) -> str:
     return f', '.join([f'"{field}"' for field in fields])
 
 
-def dump_value(value):
+def dump_value(value: Union[str, list, tuple, int, float]):
     """
     :param value:
     :return:
@@ -133,6 +134,9 @@ def dump_value(value):
 
     if isinstance(value, str):
         return f"'{value}'"
+
+    if isinstance(value, list):
+        return tuple(value)
 
     if value is None:
         return "null"
