@@ -1,7 +1,8 @@
 import logging
 
 from models_manager.manager.exeptions import ModelOperationError, QuerySetOperationError
-from models_manager.utils import serializer, normalize_model, binding, dump_value, where
+from models_manager.manager.query.builder import get_query
+from models_manager.utils import serializer, normalize_model, binding, dump_value
 
 
 class QuerySet:
@@ -121,7 +122,7 @@ class QuerySet:
 
         return self.__as_query_set(as_query_set, result)
 
-    def filter(self, as_query_set: bool = True, operand='AND', operator='=', **kwargs):
+    def filter(self, *args, as_query_set: bool = True, **kwargs):
         """
         Used to chain multiple select queries
 
@@ -146,11 +147,11 @@ class QuerySet:
         model = normalize_model(self._model)
         bind = binding(self._instances)
         sql = f'SELECT * FROM "{model}" WHERE "{model}"."{self._identity}" IN ({bind})'
-        values = tuple(kwargs.values())
+        query = get_query(model, *args, **kwargs)
 
-        if kwargs:
-            sql += where(model, operand, operator, 'AND', **kwargs)
+        if query:
+            sql += f' AND {query}'
 
-        cursor = self._query(sql, (*self.__map_to_identity, *values))
+        cursor = self._query(sql, self.__map_to_identity)
         result = serializer(cursor, many=True)
         return self.__as_query_set(as_query_set, result)

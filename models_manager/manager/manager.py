@@ -4,7 +4,8 @@ from typing import Dict, List, Union, Tuple
 from models_manager.connect import Connect
 from models_manager.manager.exeptions import ModelDoesNotExists, ModelOperationError
 from models_manager.manager.field import Field
-from models_manager.manager.query import QuerySet
+from models_manager.manager.query.builder import get_query
+from models_manager.manager.query_set import QuerySet
 from models_manager.providers.provider import Provider
 from models_manager.utils import where, normalize_model, serializer, dump_value, dump_fields, binding
 
@@ -416,7 +417,7 @@ class ModelManager:
 
         return self.__as_json(as_json, result)
 
-    def filter(self, as_json=True, operand='AND', operator='=', **kwargs):
+    def filter(self, *args, as_json=True, **kwargs):
         """
         Getting db instances
 
@@ -427,16 +428,17 @@ class ModelManager:
         model = normalize_model(self._model)
         sql = f'SELECT * FROM "{model}"'
         values = tuple(kwargs.values())
+        query = get_query(model, *args, **kwargs)
 
-        if kwargs:
-            sql += where(model, operand, operator, **kwargs)
+        if query:
+            sql += f' WHERE {query}'
 
         if isinstance(values, (list, tuple)):
             if not all(bool(value) for value in values):
                 logging.warning(f'Values is empty {values}({type(values)}). Nothing to query')
                 return self.__as_json(as_json, [])
 
-        cursor = self._lazy_query(sql, values)
+        cursor = self._lazy_query(sql)
         result = serializer(cursor, many=True)
 
         return self.__as_json(as_json, result)
