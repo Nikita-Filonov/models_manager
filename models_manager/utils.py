@@ -138,6 +138,9 @@ def dump_value(value: Union[str, list, tuple, int, float]):
     if isinstance(value, list):
         return tuple(value)
 
+    if isinstance(value, tuple) and len(value) == 1:
+        return f"('{value[0]}')"
+
     if value is None:
         return "null"
 

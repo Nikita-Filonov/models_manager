@@ -338,7 +338,7 @@ class ModelManager:
 
         return fields
 
-    def get(self, as_json=True, **kwargs):
+    def get(self, *args, as_json=True, **kwargs):
         """
         Getting db instance
 
@@ -348,13 +348,12 @@ class ModelManager:
         """
         model = normalize_model(self._model)
         sql = f'SELECT * FROM "{model}"'
-        values = tuple(kwargs.values())
 
-        if kwargs:
-            bind = ' AND '.join([f'"{model}"."{field}" = %s' for field in kwargs])
-            sql += f' WHERE {bind};'
+        query = get_query(model, *args, **kwargs)
+        if query:
+            sql += f' WHERE {query}'
 
-        cursor = self._lazy_query(sql, values)
+        cursor = self._lazy_query(sql)
         result = serializer(cursor, many=False)
 
         if not result:
@@ -464,7 +463,7 @@ class ModelManager:
         cursor = self._lazy_query(sql, values)
         return bool(cursor.fetchall())
 
-    def get_or_create(self, as_json=True, **kwargs):
+    def get_or_create(self, *args, as_json=True, **kwargs):
         """
         Will return existing instance if such exists else
         will create such instance and return it.
@@ -473,6 +472,6 @@ class ModelManager:
         MyModel.manager.get_or_create(name='some') -> {'id': 1, 'name': 'some'}
         """
         try:
-            return self.get(as_json, **kwargs)
+            return self.get(as_json=as_json, *args, **kwargs)
         except ModelDoesNotExists:
             return self.create(as_json, **kwargs)
