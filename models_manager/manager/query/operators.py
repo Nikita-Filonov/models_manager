@@ -15,6 +15,7 @@ class SupportedOperators(Enum):
     """
     IN = '__in', 'IN'
     NOT_IN = '__not_in', 'NOT IN'
+    NOT_EQUAL = '__not_equal', '!='
     LT = '__lt', '<'
     LE = '__le', '<='
     GT = '__gt', '>'
