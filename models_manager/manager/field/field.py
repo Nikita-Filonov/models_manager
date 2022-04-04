@@ -1,6 +1,9 @@
+from enum import Enum
+
 from models_manager.constants import TYPE_NAMES
 from models_manager.manager.exeptions import FieldException
 from models_manager.manager.field.typing import GenericTypes, GenericCategories, SUPPORTED_TYPES
+from models_manager.manager.field.utils import get_enum_value
 from models_manager.providers.context import ProviderContext
 from models_manager.providers.provider import CommonProvider, Provider
 from models_manager.providers.schema_provider import SchemaProvider
@@ -89,6 +92,9 @@ class Field:
         if self.default is None:
             return
 
+        if issubclass(self.category, Enum):
+            return get_enum_value(self.category, self.default)
+
         return self.category(self.default() if callable(self.default) else self.default)
 
     def __str__(self):
@@ -140,7 +146,7 @@ class Field:
         provider = SchemaProvider(
             is_nullable=self.is_nullable,
             is_related=self.is_related,
-            category=self.category,  # TODO  use safe category,
+            category=self.category,
             max_length=self.max_length,
             default=self.default
         )

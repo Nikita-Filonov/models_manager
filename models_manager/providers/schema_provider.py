@@ -1,11 +1,7 @@
 from enum import Enum
 
 from models_manager.constants import TYPE_NAMES
-from models_manager.manager.field.typing import GenericCategories, GenericTypes
-
-
-def get_enum_value(category: GenericCategories, default: GenericTypes):
-    return category.get_value(default) if hasattr(category, 'get_value') else default.value
+from models_manager.manager.field.utils import get_enum_value
 
 
 class SchemaProvider:

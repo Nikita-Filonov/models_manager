@@ -8,5 +8,6 @@ TYPE_NAMES = {
     float: 'number',
     list: 'array',
     bool: 'boolean',
-    None: 'null'
+    None: 'null',
+    tuple: 'array'
 }
