@@ -1,23 +1,21 @@
-from typing import Union, Type, Dict, List, Callable
-
 from models_manager.constants import TYPE_NAMES
 from models_manager.manager.exeptions import FieldException
+from models_manager.manager.field.typing import GenericTypes, GenericCategories, SUPPORTED_TYPES
 from models_manager.providers.context import ProviderContext
 from models_manager.providers.provider import CommonProvider, Provider
+from models_manager.providers.schema_provider import SchemaProvider
 
 
 class Field:
-    SUPPORTED_TYPES = (str, int, float, list, dict, bool)
-    SUPPORTED_TYPES_ANNOTATION = Union[str, int, float, list, dict, bool, Callable, None]
 
     def __init__(self, json: str = None,
                  max_length: int = None,
                  null: bool = False,
                  only_json: bool = False,
                  is_related: bool = False,
-                 value: SUPPORTED_TYPES_ANNOTATION = None,
-                 category: Union[Type[str], Type[int], Type[float], Type[list], Type[dict], Type[bool]] = str,
-                 default: SUPPORTED_TYPES_ANNOTATION = None):
+                 value: GenericTypes = None,
+                 category: GenericCategories = str,
+                 default: GenericTypes = None):
         self.json = json
         self.null = null
         self.value = value
@@ -28,7 +26,7 @@ class Field:
         self.is_related = is_related
 
     @property
-    def get_value(self) -> SUPPORTED_TYPES_ANNOTATION:
+    def get_value(self) -> GenericTypes:
         """
         Returns ``value`` attribute if it is not None, else
         will return default value
@@ -49,7 +47,7 @@ class Field:
         return self.get_default if self.value is None else self.value
 
     @property
-    def get_default(self) -> SUPPORTED_TYPES_ANNOTATION:
+    def get_default(self) -> GenericTypes:
         """
         Returns ``default`` attribute. There is two possible scenarios:
         1. ``default`` is a function - ``get_default`` will call this function and
@@ -85,7 +83,7 @@ class Field:
         []
 
         """
-        if not issubclass(self.category, self.SUPPORTED_TYPES):
+        if not issubclass(self.category, SUPPORTED_TYPES):
             raise FieldException(f'Category type of "{self.category}" is not supported.')
 
         if self.default is None:
@@ -114,7 +112,7 @@ class Field:
         return self.json
 
     @property
-    def get_schema(self) -> Union[Dict[str, int], Dict[str, Union[List[str], str]]]:
+    def get_schema(self) -> SchemaProvider:
         """
         Used to get schema properties template for certain field.
 
@@ -139,14 +137,14 @@ class Field:
         >>> object_id.get_schema
         {'type': ['string', 'null']}
         """
-        field_type = [TYPE_NAMES[self.category], 'null'] \
-            if (self.is_nullable or self.is_related) else TYPE_NAMES[self.category]
-        template = {"type": field_type}
-
-        if (self.category is str) and (self.max_length is not None):
-            template = {**template, 'minLength': 0, 'maxLength': self.max_length}
-
-        return template
+        provider = SchemaProvider(
+            is_nullable=self.is_nullable,
+            is_related=self.is_related,
+            category=self.category,  # TODO  use safe category,
+            max_length=self.max_length,
+            default=self.default
+        )
+        return provider.schema()
 
     def get_negative_values(self, provider: Provider = None) -> SUPPORTED_TYPES:
         """
