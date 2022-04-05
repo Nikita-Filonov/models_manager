@@ -1,5 +1,5 @@
 from models_manager.connect import Connect
-from models_manager.manager.field.enums import FiledGenericEnum
+from models_manager.manager.field.enums import FieldGenericEnum
 from models_manager.manager.field.field import Field
 from models_manager.manager.model import Model
 from models_manager.manager.query.node import Q
@@ -11,5 +11,5 @@ __all__ = [
     'Model',
     'Connect',
     'Provider',
-    'FiledGenericEnum'
+    'FieldGenericEnum'
 ]
