@@ -1,3 +1,5 @@
+from typing import Union, Dict, List
+
 from models_manager.constants import TYPE_NAMES
 from models_manager.manager.exeptions import FieldException
 from models_manager.manager.field.typing import GenericTypes, GenericCategories, SUPPORTED_TYPES, GenericChoices
@@ -114,7 +116,7 @@ class Field:
         return self.json
 
     @property
-    def get_schema(self):
+    def get_schema(self) -> Union[Dict[str, int], Dict[str, Union[list, tuple]], Dict[str, Union[List[str], str]]]:
         """
         Used to get schema properties template for certain field.
 
@@ -163,7 +165,7 @@ class Field:
 
         return template
 
-    def get_negative_values(self, provider: Provider = None) -> SUPPORTED_TYPES:
+    def get_negative_values(self, provider: Provider = None) -> GenericTypes:
         """
         :param provider: Provider class which will be applied for getting negative value
         :return: Negative value depends on Field context
