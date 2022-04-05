@@ -162,18 +162,3 @@ def normalize_model(model) -> str:
     """
     model_parts = re.findall('[A-Z][^A-Z]*', model)
     return '_'.join([part.lower() for part in model_parts])
-
-
-def where(model, operand='AND', operator='=', start='WHERE', **kwargs) -> str:
-    """
-    :param start: WHERE, AND, OR
-    :param model: Name of database table
-    :param operand: Logic operand like 'AND', 'OR' etc.
-    :param operator: Operator like '=', '<', '>' etc.
-    :param kwargs:
-    :return:
-
-    Will return formatted where query
-    """
-    bind = f' {operand} '.join([f'"{model}"."{field}" {operator} %s' for field in kwargs])
-    return f' {start} {bind};'

@@ -7,7 +7,7 @@ from models_manager.manager.field.field import Field
 from models_manager.manager.query.builder import get_query
 from models_manager.manager.query_set import QuerySet
 from models_manager.providers.provider import Provider
-from models_manager.utils import where, normalize_model, serializer, dump_value, dump_fields, binding
+from models_manager.utils import normalize_model, serializer, dump_value, dump_fields, binding
 
 connection = Connect()
 
@@ -442,7 +442,7 @@ class ModelManager:
 
         return self.__as_json(as_json, result)
 
-    def is_exists(self, operand='AND', operator='=', **kwargs) -> bool:
+    def is_exists(self, *args, **kwargs) -> bool:
         """
         This method used to check if object exists in database.
         Will return True if object exists else will return False.
@@ -455,12 +455,12 @@ class ModelManager:
         """
         model = normalize_model(self._model)
         sql = f'SELECT NULL FROM "{model}"'
-        values = tuple(kwargs.values())
+        query = get_query(model, *args, **kwargs)
 
-        if kwargs:
-            sql += where(model, operand, operator, **kwargs)
+        if query:
+            sql += f' WHERE {query}'
 
-        cursor = self._lazy_query(sql, values)
+        cursor = self._lazy_query(sql)
         return bool(cursor.fetchall())
 
     def get_or_create(self, *args, as_json=True, **kwargs):
