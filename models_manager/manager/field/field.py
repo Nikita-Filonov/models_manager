@@ -1,9 +1,6 @@
-from enum import Enum
-
 from models_manager.constants import TYPE_NAMES
 from models_manager.manager.exeptions import FieldException
-from models_manager.manager.field.typing import GenericTypes, GenericCategories, SUPPORTED_TYPES
-from models_manager.manager.field.utils import get_enum_value
+from models_manager.manager.field.typing import GenericTypes, GenericCategories, SUPPORTED_TYPES, GenericChoices
 from models_manager.providers.context import ProviderContext
 from models_manager.providers.provider import CommonProvider, Provider
 from models_manager.providers.schema_provider import SchemaProvider
@@ -17,6 +14,7 @@ class Field:
                  only_json: bool = False,
                  is_related: bool = False,
                  value: GenericTypes = None,
+                 choices: GenericChoices = None,
                  category: GenericCategories = str,
                  default: GenericTypes = None):
         self.json = json
@@ -27,6 +25,7 @@ class Field:
         self.only_json = only_json
         self.category = category
         self.is_related = is_related
+        self.choices = choices
 
     @property
     def get_value(self) -> GenericTypes:
@@ -92,9 +91,6 @@ class Field:
         if self.default is None:
             return
 
-        if issubclass(self.category, Enum):
-            return get_enum_value(self.category, self.default)
-
         return self.category(self.default() if callable(self.default) else self.default)
 
     def __str__(self):
@@ -148,7 +144,8 @@ class Field:
             is_related=self.is_related,
             category=self.category,
             max_length=self.max_length,
-            default=self.default
+            default=self.default,
+            choices=self.choices
         )
         return provider.schema()
 

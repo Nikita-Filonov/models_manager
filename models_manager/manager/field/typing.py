@@ -1,7 +1,17 @@
-from enum import Enum
 from typing import Union, Type, Callable
 
-SUPPORTED_TYPES = (str, int, float, list, dict, bool, Enum)
+from models_manager.manager.abs_model import AbsModel
 
-GenericTypes = Union[str, int, float, list, dict, bool, Enum, Callable, None]
-GenericCategories = Union[Type[str], Type[int], Type[float], Type[list], Type[dict], Type[bool], Type[Enum]]
+SUPPORTED_TYPES = (str, int, float, list, dict, bool, AbsModel)
+
+GenericTypes = Union[str, int, float, list, dict, bool, AbsModel, Callable, None]
+GenericCategories = Union[
+    Type[str],
+    Type[int],
+    Type[float],
+    Type[list],
+    Type[dict],
+    Type[bool],
+    Type[AbsModel]
+]
+GenericChoices = Union[list, tuple]

@@ -1,21 +1,27 @@
-from enum import Enum
-
 from models_manager.constants import TYPE_NAMES
-from models_manager.manager.field.utils import get_enum_value
+from models_manager.manager.abs_model import AbsModel
+from models_manager.manager.field.typing import GenericCategories, GenericTypes, GenericChoices
 
 
 class SchemaProvider:
-    def __init__(self, category, is_related, is_nullable, max_length, default):
+    def __init__(self, category: GenericCategories,
+                 default: GenericTypes,
+                 choices: GenericChoices,
+                 is_related: bool,
+                 is_nullable: bool,
+                 max_length: int):
         self._category = category
         self.is_related = is_related
         self.is_nullable = is_nullable
         self.max_length = max_length
         self.default = default
+        self.choices = choices
 
     @property
     def safe_category(self):
-        if issubclass(self._category, Enum):
-            return type(get_enum_value(self._category, self.default))
+        if issubclass(self._category, AbsModel):
+            # TODO handle List[Model]
+            return dict
 
         return self._category
 
@@ -24,8 +30,8 @@ class SchemaProvider:
         if self._category in TYPE_NAMES.keys():
             return TYPE_NAMES[self._category]
 
-        if issubclass(self._category, Enum):
-            return 'enum'
+        if issubclass(self._category, AbsModel):
+            return 'model'
 
         return TYPE_NAMES[str]
 
@@ -40,7 +46,12 @@ class SchemaProvider:
     def generic(self):
         field_type = TYPE_NAMES[self.safe_category]
         field_type_safe_null = [field_type, 'null'] if (self.is_nullable or self.is_related) else field_type
-        return {"type": field_type_safe_null}
+        template = {"type": field_type_safe_null}
+
+        if self.choices:
+            template = {**template, 'enum': self.choices}
+
+        return template
 
     def string(self):
         template = self.generic()
@@ -50,7 +61,5 @@ class SchemaProvider:
 
         return template
 
-    def enum(self):
-        template = self.generic()
-        enum_values = [get_enum_value(self._category, enum) for enum in self._category]
-        return {**template, 'enum': enum_values}
+    def model(self):
+        return self._category.manager.to_schema

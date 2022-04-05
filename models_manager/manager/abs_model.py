@@ -1,0 +1,2 @@
+class AbsModel:
+    pass
