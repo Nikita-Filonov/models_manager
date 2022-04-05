@@ -1,9 +1,7 @@
 from models_manager.constants import TYPE_NAMES
 from models_manager.manager.exeptions import FieldException
 from models_manager.manager.field.typing import GenericTypes, GenericCategories, SUPPORTED_TYPES, GenericChoices
-from models_manager.providers.context import ProviderContext
-from models_manager.providers.provider import CommonProvider, Provider
-from models_manager.providers.schema_provider import SchemaProvider
+from models_manager.providers.provider import Provider, NegativeValuesProvider
 
 
 class Field:
@@ -13,6 +11,7 @@ class Field:
                  null: bool = False,
                  only_json: bool = False,
                  is_related: bool = False,
+                 related_to=None,
                  value: GenericTypes = None,
                  choices: GenericChoices = None,
                  category: GenericCategories = str,
@@ -26,6 +25,7 @@ class Field:
         self.category = category
         self.is_related = is_related
         self.choices = choices
+        self.related_to = related_to
 
     @property
     def get_value(self) -> GenericTypes:
@@ -114,7 +114,7 @@ class Field:
         return self.json
 
     @property
-    def get_schema(self) -> SchemaProvider:
+    def get_schema(self):
         """
         Used to get schema properties template for certain field.
 
@@ -139,15 +139,29 @@ class Field:
         >>> object_id.get_schema
         {'type': ['string', 'null']}
         """
-        provider = SchemaProvider(
-            is_nullable=self.is_nullable,
-            is_related=self.is_related,
-            category=self.category,
-            max_length=self.max_length,
-            default=self.default,
-            choices=self.choices
-        )
-        return provider.schema()
+        if self.related_to is not None:
+            if not hasattr(self.related_to, 'manager'):
+                raise FieldException('The property "related_to" should be Model instance')
+
+            if issubclass(self.category, (list, tuple)):
+                return self.related_to.manager.to_array_schema
+
+            if issubclass(self.category, dict):
+                return self.related_to.manager.to_schema
+
+            raise FieldException('For Model only dict, list, tuple categories is supported')
+
+        field_type = TYPE_NAMES[self.category]
+        field_type_safe_null = [field_type, 'null'] if (self.is_nullable or self.is_related) else field_type
+        template = {"type": field_type_safe_null}
+
+        if self.choices is not None:
+            template = {**template, 'enum': self.choices}
+
+        if self.max_length is not None:
+            template = {**template, 'minLength': 0, 'maxLength': self.max_length}
+
+        return template
 
     def get_negative_values(self, provider: Provider = None) -> SUPPORTED_TYPES:
         """
@@ -160,8 +174,5 @@ class Field:
             >>> name = Field(json='name', category=str, max_length=255, null=False)
             >>> name.get_negative_values()
         """
-        safe_provider = provider or CommonProvider
-        value_method = getattr(safe_provider, TYPE_NAMES[self.category])
-        context = ProviderContext(null=self.is_nullable, max_length=self.max_length)
-
-        return value_method(context)
+        safe_provider = provider or NegativeValuesProvider
+        return safe_provider(null=self.null, max_length=self.max_length, category=self.category).value()

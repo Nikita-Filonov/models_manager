@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 
-from models_manager.providers.context import ProviderContext
-from models_manager.utils import random_dict, random_string, random_list, random_number
+from models_manager.constants import TYPE_NAMES
+from models_manager.manager.exeptions import ProviderException
+from models_manager.manager.field.typing import GenericCategories
+from models_manager.utils import random_number, random_string
 
 
 class Provider(ABC):
@@ -10,33 +12,39 @@ class Provider(ABC):
     negative values based on field context
     """
 
-    @staticmethod
+    def __init__(self, *args, **kwargs):
+        pass
+
     @abstractmethod
-    def string(context: ProviderContext):
+    def value(self):
         return
 
-    @staticmethod
     @abstractmethod
-    def number(context: ProviderContext):
+    def generic(self):
         return
 
-    @staticmethod
     @abstractmethod
-    def boolean(context: ProviderContext):
+    def string(self):
         return
 
-    @staticmethod
     @abstractmethod
-    def array(context: ProviderContext):
+    def number(self):
         return
 
-    @staticmethod
     @abstractmethod
-    def object(context: ProviderContext):
+    def boolean(self):
+        return
+
+    @abstractmethod
+    def array(self):
+        return
+
+    @abstractmethod
+    def object(self):
         return
 
 
-class CommonProvider(Provider):
+class NegativeValuesProvider(Provider):
     """
     Common provider with default methods for getting negative values
 
@@ -46,28 +54,42 @@ class CommonProvider(Provider):
     2. Inherit from ``Provider`` and implement all methods from scratch
     """
 
-    @staticmethod
-    def string(context: ProviderContext):
-        return None if not context.null else random_string(context.max_length, context.max_length + 50)
+    def __init__(self, null: bool, max_length: int, category: GenericCategories):
+        super().__init__()
 
-    @staticmethod
-    def number(context: ProviderContext):
-        if not context.null:
+        self.null = null
+        self.max_length = max_length
+        self.category = category
+
+    def value(self):
+        func = getattr(self, TYPE_NAMES[self.category], None)
+
+        if func is None:
+            supported = ','.join(TYPE_NAMES.keys())
+            raise ProviderException(f'Unable to resolve type {self.category}, choose one of supported {supported}')
+
+        return func()
+
+    def generic(self):
+        return None if not self.null else random_string()
+
+    def string(self):
+        return None if not self.null else random_string(self.max_length, self.max_length + 50)
+
+    def number(self):
+        if not self.null:
             return
 
-        if context.max_length is not None:
-            return random_number(context.max_length, context.max_length + 50)
+        if self.max_length is not None:
+            return random_number(self.max_length, self.max_length + 50)
 
         return random_string()
 
-    @staticmethod
-    def boolean(context: ProviderContext):
-        return None if not context.null else random_string()
+    def boolean(self):
+        return self.generic()
 
-    @staticmethod
-    def array(context: ProviderContext):
-        return None if not context.null else random_dict()
+    def array(self):
+        return self.generic()
 
-    @staticmethod
-    def object(context: ProviderContext):
-        return None if not context.null else random_list()
+    def object(self):
+        return self.generic()

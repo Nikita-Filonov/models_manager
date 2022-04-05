@@ -1,7 +1,6 @@
 from functools import reduce
 from typing import Union
 
-from models_manager.manager.abs_model import AbsModel
 from models_manager.manager.manager import ModelManager
 
 
@@ -55,7 +54,7 @@ class Meta(type):
         return extended_by.__name__ if extended_by else name
 
 
-class Model(AbsModel, metaclass=Meta):
+class Model(metaclass=Meta):
     database = None
     identity = 'id'
     extended_by = None

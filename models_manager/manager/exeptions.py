@@ -34,3 +34,7 @@ class QuerySetOperationError(Exception):
     Raised when query set operation has wrong usage
     """
     pass
+
+
+class ProviderException(Exception):
+    pass
