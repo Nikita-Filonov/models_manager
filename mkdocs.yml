@@ -1,4 +1,38 @@
+nav:
+  - Home: index.md
+  - Model:
+      - Basic model: models/models.md
+      - Inheritance: models/inheritance.md
+      - Json: models/json.md
+      - Schema: models/schema.md
+  - Field: field.md
+  - Providers: providers.md
+  - Examples: examples.md
+  - Database:
+      - Setup: database/setup.md
+      - Connect: database/connect.md
+      - Query: database/query.md
+
 theme:
   name: material
+  features:
+    - content.code.annotate
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
 
 site_name: Models Manager
+
