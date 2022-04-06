@@ -1,0 +1,13 @@
+stages:
+  - docs
+
+pages:
+  stage: docs
+  script:
+    - mkdir public
+    - mv ./docs/* public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - when: always
