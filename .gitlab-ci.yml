@@ -1,13 +1,12 @@
-stages:
-  - docs
-
+image: python:latest
 pages:
-  stage: docs
+  stage: deploy
+  only:
+    - master
+    - main
   script:
-    - mkdir public
-    - mv ./docs/* public
+    - pip install mkdocs-material
+    - mkdocs build --site-dir public
   artifacts:
     paths:
       - public
-  rules:
-    - when: always
