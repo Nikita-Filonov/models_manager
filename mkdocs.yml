@@ -4,7 +4,13 @@ nav:
       - Basic model: models/models.md
       - Inheritance: models/inheritance.md
       - Json: models/json.md
-      - Schema: models/schema.md
+  - Schema:
+      - Basic: schema/basic.md
+      - Object: schema/object.md
+      - Array: schema/array.md
+      - Nested object: schema/nested_object.md
+      - Nested array: schema/nested_array.md
+      - Enums: schema/enum.md
   - Field: field.md
   - Providers: providers.md
   - Examples: examples.md
@@ -12,6 +18,7 @@ nav:
       - Setup: database/setup.md
       - Connect: database/connect.md
       - Query: database/query.md
+  - Enums: enums.md
 
 theme:
   name: material
