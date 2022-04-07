@@ -20,7 +20,7 @@ class Field:
                  default: GenericTypes = None):
         self.json = json
         self.null = null
-        self.value = value
+        self._value = value
         self.max_length = max_length
         self.default = default
         self.only_json = only_json
@@ -30,25 +30,29 @@ class Field:
         self.related_to = related_to
 
     @property
-    def get_value(self) -> GenericTypes:
+    def value(self) -> GenericTypes:
         """
         Returns ``value`` attribute if it is not None, else
         will return default value
 
         Example:
         >>> name = Field(json='name', category=str, default='some')
-        >>> name.get_value
+        >>> name.value
         'some'
 
         >>> name = Field(json='name', category=str, default='some', value='another')
-        >>> name.get_value
+        >>> name.value
         'another'
 
         >>> name = Field(json='name', category=str, value='another')
-        >>> name.get_value
+        >>> name.value
         'another'
         """
-        return self.get_default if self.value is None else self.value
+        return self.get_default if self._value is None else self._value
+
+    @value.setter
+    def value(self, value):
+        self._value = value
 
     @property
     def get_default(self) -> GenericTypes:
@@ -96,16 +100,16 @@ class Field:
         return self.category(self.default() if callable(self.default) else self.default)
 
     def __str__(self):
-        return str(self.get_value)
+        return str(self.value)
 
     def __repr__(self):
-        return str(self.get_value)
+        return str(self.value)
 
     def __add__(self, other):
-        return self.get_value + other
+        return self.value + other
 
     def __len__(self):
-        return len(self.get_value)
+        return len(self.value)
 
     @property
     def is_nullable(self):
@@ -177,4 +181,9 @@ class Field:
             >>> name.get_negative_values()
         """
         safe_provider = provider or NegativeValuesProvider
-        return safe_provider(null=self.null, max_length=self.max_length, category=self.category).value()
+        return safe_provider(
+            null=self.null,
+            max_length=self.max_length,
+            category=self.category,
+            json=self.json
+        ).value()

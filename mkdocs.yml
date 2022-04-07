@@ -33,6 +33,9 @@ markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
 
 site_name: Models Manager
 

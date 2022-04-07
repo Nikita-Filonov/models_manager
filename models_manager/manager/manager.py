@@ -36,6 +36,12 @@ class ModelManager:
     def _lazy_query(self):
         return getattr(connection, self._database, None)
 
+    def apply_values(self, **kwargs):
+        for field, value in self.__dict__.items():
+            if isinstance(value, Field) and field.startswith('_meta'):
+                value.value = kwargs.get(value.json, None)
+                setattr(self, field, value)
+
     def __resolve_attrs(self, **kwargs):
         """
         Method that helps to keep consistency of attr
@@ -151,7 +157,7 @@ class ModelManager:
             MyModel.manager.to_json -> {'id': 1, 'username': 'some'}
         """
         return {
-            value.json: value.get_default
+            value.json: value.value
             for value in self.__fields_as_original().values()
             if value.json is not None
         }

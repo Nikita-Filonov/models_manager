@@ -54,9 +54,10 @@ class NegativeValuesProvider(Provider):
     2. Inherit from ``Provider`` and implement all methods from scratch
     """
 
-    def __init__(self, null: bool, max_length: int, category: GenericCategories):
+    def __init__(self, null: bool, max_length: int, category: GenericCategories, json: str):
         super().__init__()
 
+        self.json = json
         self.null = null
         self.max_length = max_length
         self.category = category
@@ -74,7 +75,10 @@ class NegativeValuesProvider(Provider):
         return None if not self.null else random_string()
 
     def string(self):
-        return None if not self.null else random_string(self.max_length, self.max_length + 50)
+        if self.null and self.max_length is None:
+            raise ProviderException(f'Provide "max_length" argument for field "{self.json}"')
+
+        return None if (not self.null) else random_string(self.max_length, self.max_length + 50)
 
     def number(self):
         if not self.null:

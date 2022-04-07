@@ -58,3 +58,6 @@ class Model(metaclass=Meta):
     database = None
     identity = 'id'
     extended_by = None
+
+    def __init__(self, **kwargs):
+        self.manager.apply_values(**kwargs)
