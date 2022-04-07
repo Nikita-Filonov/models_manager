@@ -1,5 +1,9 @@
 Let's go back to the user model and try to validate json
 
+
+Basic
+---
+
 ```json
 {
   "id": 1,
@@ -58,6 +62,9 @@ From here we see that:
 - username - string
 - email - string
 
+Max length
+---
+
 Let's add more specifics for some fields
 
 ```python hl_lines="6 7 16 17 18 19 20 21 22 23 24 25"
@@ -92,3 +99,60 @@ User.manager.to_schema
 ```
 
 Now we can see that the username is in a certain length range from 0 to 100, just like the email field
+
+Required
+---
+
+Now let's see how we can validate optional fields in an object. Imagine now that the user object has an optional `token`
+field, which may or may not be
+
+```json
+{
+  "id": 1,
+  "username": "some",
+  "email": "other"
+}
+```
+
+Also valid
+
+```json hl_lines="5"
+{
+  "id": 1,
+  "username": "some",
+  "email": "other",
+  "token": "some-token"
+}
+```
+
+Let's add a new token field to our user model
+
+```python hl_lines="8 17 19"
+from models_manager import Model, Field
+
+
+class User(Model):
+    id = Field(default=1, json='id', category=int)
+    username = Field(default='some', json='username', category=str)
+    email = Field(default='other', json='email', category=str)
+    token = Field(default='some-token', json='token', is_related=True)
+
+
+{
+    'type': 'object',
+    'properties': {
+        'id': {'type': 'number'},
+        'username': {'type': 'string'},
+        'email': {'type': 'string'},
+        'token': {'type': ['string', 'null']}
+    },
+    'required': ['id', 'username', 'email']
+}
+```
+
+!!! note
+
+    Notice that we have added the `is_related` argument 
+    to the `token` field. You can read more about field 
+    arguments [here](../field.md)
+    
