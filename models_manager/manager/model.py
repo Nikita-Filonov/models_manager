@@ -62,7 +62,7 @@ class Model(metaclass=Meta):
     extended_by = None
 
     def __init__(self, **kwargs):
-        self.manager = deepcopy(self.manager)
+        self.manager: ModelManager = deepcopy(self.manager)
         self.manager.apply_values(**kwargs)
 
         fields: Dict[str, Field] = self.manager.fields(json_key=False)

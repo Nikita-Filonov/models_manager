@@ -211,14 +211,186 @@ object.
 null
 ---
 
+The `null` argument controls whether the field can be null - essentially empty. For example, if we specify that the
+field is `null=True`, then this will affect the schema generation. Let's take a simple example
+
+```python
+from models_manager import Field
+
+username = Field(category=str, json='username', null=True)
+username.get_schema
+{
+    'type': ['string', 'null']
+}
+```
+
+It can be seen from the example above that if we add the `null=True` argument to the field. Then when generating the
+schema, we will get the variability of the field values `string` or `null`
+
 choices
 ---
 
+The `choices` argument is responsible for the variability of field values. for example, if the field has only a certain
+range of values. Let's look at an example
+
+```python
+from models_manager import Model, Field, FieldGenericEnum
+
+
+class ProjectStates(FieldGenericEnum):
+    """This is some states of the project"""
+    STARTING = 1
+    PENDING = 2
+    STARTED = 3
+    CLOSED = 4
+    STOPPED = 5
+
+
+class Project(Model):
+    title = Field(json='title', category=str)
+    state = Field(json='state', choices=ProjectStates.to_list(), category=int)
+```
+
+Now, when creating an object or generating a schema, it will validate that the `state` field has a certain set of
+values. Let's look at an example of creating an object
+
+```python hl_lines="18 19 20 21 22 23 24 25 26"
+from models_manager import Model, Field, FieldGenericEnum
+
+
+class ProjectStates(FieldGenericEnum):
+    """This is some states of the project"""
+    STARTING = 1
+    PENDING = 2
+    STARTED = 3
+    CLOSED = 4
+    STOPPED = 5
+
+
+class Project(Model):
+    title = Field(json='title', category=str)
+    state = Field(json='state', choices=ProjectStates.to_list(), category=int)
+
+
+project_json = get_project(id=1).json()
+{
+    "title": "some",
+    "state": 7
+}
+
+Project(**project_json)  # will raise an exception, because 7 is not valid state
+
+'FieldException: The "state" field must be one of the 1, 2, 3, 4, 5, but 6 was received'
+```
+
 related_to
 ---
+The `related_to` attribute is using to describe nested entities. For example, if json has a complex nested structure,
+then we can describe it using this attribute. Let's imagine that we have an API that returns an object with multiple
+nesting.
+
+```json
+{
+  "id": 1,
+  "username": "some",
+  "email": "other",
+  "tenant": {
+    "id": 1,
+    "name": "Customer"
+  },
+  "roles": [
+    {
+      "id": 1,
+      "name": "Junior",
+      "permissions": [
+        {
+          "id": 1,
+          "action": "Read"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Middle",
+      "permissions": [
+        {
+          "id": 1,
+          "action": "Read"
+        },
+        {
+          "id": 2,
+          "action": "Create"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Let's describe this json object in the form of models
+
+```python
+from models_manager import Model, Field
+
+
+class Tenant(Model):
+    id = Field(json='id', category=int)
+    name = Field(json='name', category=str)
+
+
+class Permission(Model):
+    id = Field(json='id', category=int)
+    action = Field(json='action', category=str)
+
+
+class Role(Model):
+    id = Field(json='id', category=int)
+    name = Field(json='name', category=str)
+    permissions = Field(json='permissions', related_to=Permission, category=list)
+
+
+class User(Model):
+    id = Field(json='id', category=int)
+    username = Field(json='username', category=str)
+    email = Field(json='email', category=str)
+    tenant = Field(json='tenant', category=dict, related_to=Tenant)
+    roles = Field(json='roles', category=list, related_to=Role)
+```
 
 only_json
 ---
+
+The `only_json` argument is using for the database. For example, if we have a field that is displayed in the json
+object, but it is not in the database. For example, consider a json object and a table in a database
+
+```json
+{
+  "id": 1,
+  "username": "some",
+  "token": "some-token which is not in database"
+}
+```
+
+| id  | username |
+| :---| :------- |
+| 1   | some1    |
+| 2   | some2    |
+| 3   | some3    |
+
+As we can see, the token field is not storing in the database, it can be dynamically calculated or cached
+
+```python
+from models_manager import Model, Field
+
+
+class UserWithToken(Model):
+    id = Field(json='id', category=int)
+    username = Field(json='username', category=str)
+    token = Field(json='token', only_json=True, category=str)
+```
+
+We described the model and specified `only_json=True` in the token field, now for any operation to the database,
+the `token` field will not be used
 
 is_related
 ---

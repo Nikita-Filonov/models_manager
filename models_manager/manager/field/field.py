@@ -52,6 +52,10 @@ class Field:
 
     @value.setter
     def value(self, value):
+        if self.choices and value not in self.choices:
+            choices = ', '.join(map(str, self.choices))
+            raise FieldException(f'The "{self.json}" field must be one of the {choices}, but {value} was received')
+
         self._value = self.category(value)
 
     @property
