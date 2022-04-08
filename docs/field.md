@@ -189,7 +189,7 @@ class User(Model):
 
 
 new_user = User(id=2, username='other')
-new_user.username.value
+new_user.username.value  # username has new value
 'other'
 new_user.manager.to_json  # json of new_user object
 {
@@ -203,6 +203,10 @@ User.manager.to_json  # json with default values
     'username': 'some'
 }
 ```
+
+From the example above, `new_user` is already a new object that has its own attributes. This object can be used as an
+annotation. Also, the `new_user` object contains the new `id`, `username` values that we passed when initializing the
+object.
 
 null
 ---

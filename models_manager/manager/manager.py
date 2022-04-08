@@ -38,10 +38,8 @@ class ModelManager:
         return getattr(connection, self._database, None)
 
     def apply_values(self, **kwargs):
-        # TODO использовать original fields
-        for field, value in self.__dict__.items():
-            if isinstance(value, Field) and field.startswith('_meta'):
-                value.value = kwargs.get(value.json, None)
+        for _, field in self.__fields_as_original(json_key=False).items():
+            field.value = kwargs.get(field.json, None)
 
     def __resolve_attrs(self, **kwargs):
         """
