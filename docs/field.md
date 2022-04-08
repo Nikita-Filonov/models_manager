@@ -37,52 +37,131 @@ User.manager.to_json
 default
 ---
 Default field value. Can be any of supported objects. Provides a default value that will be used to generate json and
-insert it into the database
+insert it into the database. By default `default` argument equal to `None`
 
 ```python
 str, int, float, list, dict, bool, Callable, None
 ```
+
+### **Basic**
+
+Let's look at a simple example with a default value
+
+```python
+from models_manager import Field
+
+items = Field(default=12345)
+
+items.get_default
+"12345"
+```
+
+!!! warning
+
+    Note that the `"12345"` object is a string. 
+    This happens because we did not pass the category. 
+    And by default string category is used
+
+Let's add a category to our field
+
+```python
+from models_manager import Field
+
+items = Field(default=12345, category=int)
+
+items.get_default
+12345
+```
+
+!!! note
+
+    Now we get the value as a integer
+
+### **Callable**
 
 Example with callable object
 
 ```python
 from models_manager import Field
 
-func = lambda: []
 
-items = Field(default=func)
+def get_items_from_api():
+    """Some function which will get items from API"""
+    return get_items().json()
+
+
+items = Field(default=get_items_from_api, category=list)
 items.get_default
 
-"[{'key': 'value'}]"
+[
+    {'key': 'value1'},
+    {'key': 'value2'},
+    {'key': 'value3'}
+]
 ```
 
-!!! warning
+Let's explain what's going on here. The `get_items_from_api` function gets a list of items and this function is callable
+object . This function is calling when we call the `get_default` method
 
-    Note that the `"[{'key': 'value'}]"` object is a string. 
-    This happens because we did not pass the category
 
-Callable object and category together
+json
+---
+The `json` argument is responsible for how the field in json will be named. Json argument is using when generating json
+and schema. Let's take a simple example.
+
+Imagine we have a user object
+
+```json
+{
+  "id": 1,
+  "firstName": "some",
+  "lastName": "other"
+}
+```
+
+Let's create a model that will describe the user object above.
 
 ```python
-from models_manager import Field
+from models_manager import Field, Model
 
-func = lambda: []
 
-items = Field(default=func, category=list)
-items.get_default
+class User(Model):
+    id = Field(json='id')
+    first_name = Field(json='firstName')
+    last_name = Field(json='lastName')
 
-[{'key': 'value'}]
+
+User.manager.to_json
+{
+    'id': None,
+    'firstName': None,
+    'lastName': None
+}
 ```
 
 !!! note
 
-    Now we get the value as a list
+    Pay attention to how the model fields are naming in 
+    the class and in json. The naming is different, because, 
+    as a rule, the front end requires fields named in the 
+    javascript style, but we work with Python code and the 
+    javascript style is not suitable
 
-json
----
+```python
+from models_manager import Field, Model
+
+
+class GoodUser(Model):
+    first_name = Field(json='firstName')  # good
+
+
+class BadUser(Model):
+    firstName = Field(json='firstName')  # very bad
+```
 
 value
 ---
+
 
 null
 ---
