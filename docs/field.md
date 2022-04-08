@@ -395,6 +395,13 @@ the `token` field will not be used
 is_related
 ---
 
+The `is_related` argument is responsible for the optionality of the field in the json object. If `is_related=True`, then
+this means that the field may not be present in the json object
+
+
 max_length
 ---
+
+The `max_length` argument, which is usually used for string fields and indicates the maximum length of the string field
+value
 
