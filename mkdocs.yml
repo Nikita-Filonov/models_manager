@@ -17,6 +17,7 @@ nav:
   - Database:
       - Setup: database/setup.md
       - Connect: database/connect.md
+      - CRUD operations: database/crud.md
       - Query: database/query.md
   - Enums: enums.md
 
@@ -27,11 +28,13 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
+      primary: blue
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
+      primary: blue
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
@@ -43,6 +46,6 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
+  - def_list
 
 site_name: Models Manager
-
