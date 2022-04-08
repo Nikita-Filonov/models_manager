@@ -52,7 +52,7 @@ class Field:
 
     @value.setter
     def value(self, value):
-        self._value = value
+        self._value = self.category(value)
 
     @property
     def get_default(self) -> GenericTypes:
@@ -100,10 +100,10 @@ class Field:
         return self.category(self.default() if callable(self.default) else self.default)
 
     def __str__(self):
-        return str(self.value)
+        return f'<Field: {self.value}>'
 
     def __repr__(self):
-        return str(self.value)
+        return f'<Field: {self.value}>'
 
     def __add__(self, other):
         return self.value + other

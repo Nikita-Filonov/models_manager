@@ -1,6 +1,8 @@
+from copy import deepcopy
 from functools import reduce
-from typing import Union
+from typing import Union, Dict
 
+from models_manager import Field
 from models_manager.manager.manager import ModelManager
 
 
@@ -60,4 +62,12 @@ class Model(metaclass=Meta):
     extended_by = None
 
     def __init__(self, **kwargs):
+        self.manager = deepcopy(self.manager)
         self.manager.apply_values(**kwargs)
+
+        fields: Dict[str, Field] = self.manager.fields(json_key=False)
+        self.__apply_to_fields(fields)
+
+    def __apply_to_fields(self, field: Dict[str, Field]):
+        for field_name, field in field.items():
+            setattr(self, field_name, field)

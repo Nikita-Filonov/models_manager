@@ -161,7 +161,48 @@ class BadUser(Model):
 
 value
 ---
+The `value` argument that is responsible for the current value of the field. Unlike the default, `value` can change.
+Let's take an example of using value
 
+```python
+from models_manager import Field
+
+username = Field(default='some')
+username.value = 'new value'
+
+username.get_default
+'some'
+username.value
+'new value'
+```
+
+As we can see, the default value does not change, unlike value, which we can change and save the current state of the
+field into it. Now let's look at a more complex example with a model
+
+```python
+from models_manager import Model, Field
+
+
+class User(Model):
+    id = Field(default=1, json='id', category=int)
+    username = Field(default='some', json='username')
+
+
+new_user = User(id=2, username='other')
+new_user.username.value
+'other'
+new_user.manager.to_json  # json of new_user object
+{
+    'id': 2,
+    'username': 'other'
+}
+
+User.manager.to_json  # json with default values
+{
+    'id': 1,
+    'username': 'some'
+}
+```
 
 null
 ---

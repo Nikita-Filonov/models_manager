@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from typing import Dict, List, Union, Tuple
 
 from models_manager.connect import Connect
@@ -37,10 +38,10 @@ class ModelManager:
         return getattr(connection, self._database, None)
 
     def apply_values(self, **kwargs):
+        # TODO использовать original fields
         for field, value in self.__dict__.items():
             if isinstance(value, Field) and field.startswith('_meta'):
                 value.value = kwargs.get(value.json, None)
-                setattr(self, field, value)
 
     def __resolve_attrs(self, **kwargs):
         """
@@ -75,7 +76,7 @@ class ModelManager:
                     logging.error(f'Unable to resolve field "{field}". Skipped')
 
             if isinstance(value, Field) and not field.startswith('_meta'):
-                setattr(self, f'_meta__{field}', value)
+                setattr(self, f'_meta__{field}', deepcopy(value))
                 continue
 
             setattr(self, field, value)
@@ -143,7 +144,7 @@ class ModelManager:
 
         return type(self._model, self._mro, {**self.__dict__, **(result or {})})()
 
-    def fields(self, json_key: bool) -> Dict[str, Field]:
+    def fields(self, json_key: bool = True) -> Dict[str, Field]:
         return self.__fields_as_original(json_key)
 
     @property
