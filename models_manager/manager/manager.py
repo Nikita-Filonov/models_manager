@@ -39,7 +39,10 @@ class ModelManager:
 
     def apply_values(self, **kwargs):
         for _, field in self.__fields_as_original(json_key=False).items():
-            field.value = kwargs.get(field.json, None)
+            value = kwargs.get(field.json, None)
+
+            if value is not None:
+                field.value = value
 
     def __resolve_attrs(self, **kwargs):
         """
