@@ -19,6 +19,7 @@ nav:
       - Setup: database/setup.md
       - Connect: database/connect.md
       - CRUD operations: database/crud.md
+      - Operators: database/operators.md
       - Query: database/query.md
   - Enums: enums.md
 
