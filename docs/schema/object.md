@@ -1,9 +1,5 @@
 Let's go back to the user model and try to validate json
 
-
-Basic
----
-
 ```json
 {
   "id": 1,
