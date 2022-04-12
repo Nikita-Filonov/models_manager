@@ -8,7 +8,7 @@ tests:
   before_script:
     - pip install -r infrastructure/requirements_dev.txt
   script:
-    - pytest
+    - python3 -m pytest
   allow_failure: false
 
 pages:
