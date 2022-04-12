@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as readme_file:
     readme = readme_file.read()
 
-requirements = ['pydantic', 'Faker', 'psycopg2-binary']
+requirements = ['Faker', 'psycopg2-binary']
 
 setup(
     name="models_manager",

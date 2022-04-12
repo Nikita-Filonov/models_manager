@@ -1,4 +1,16 @@
 image: python:latest
+
+tests:
+  stage: testing
+  tags:
+    - docker
+  image: python:3.8-alpine
+  before_script:
+    - pip install -r infrastructure/requirements_dev.txt
+  script:
+    - pytest
+  allow_failure: false
+
 pages:
   stage: deploy
   only:
