@@ -56,3 +56,18 @@ class TestField:
 
         assert field.value == 'some'
         assert callable(field.default)
+
+    @pytest.mark.parametrize('arguments, schema', [
+        ({'max_length': 255, 'category': str}, {'type': 'string', 'minLength': 0, 'maxLength': 255}),
+        ({'category': str, 'null': True}, {'type': ['string', 'null']}),
+        ({'category': int}, {'type': 'number'}),
+        ({'category': float}, {'type': 'number'}),
+        ({'category': list}, {'type': 'array'}),
+        ({'category': tuple}, {'type': 'array'}),
+        ({'category': dict}, {'type': 'object'}),
+        ({'category': bool}, {'type': 'boolean'}),
+        ({'category': None}, {'type': 'null'}),
+    ], ids=lambda param: str(param))
+    def test_field_get_schema(self, arguments, schema):
+        field = Field(json='some', **arguments)
+        assert field.get_schema == schema
