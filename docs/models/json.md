@@ -118,7 +118,7 @@ from models_manager.utils import random_string
 
 class User(Model):
     id = Field(default=uuid.uuid4, json='id', null=False)
-    username = Field(default=random_string, json='username', max_length=100, null=False)
+    username = Field(default=random_string, json='username', max_length=100, null=True)
     email = Field(default=random_string, json='email', max_length=70, null=False)
 ```
 
