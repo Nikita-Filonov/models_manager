@@ -6,6 +6,24 @@ from models_manager.schema.schema_typing import ORIGIN, ARGS, INNER
 
 
 class SchemaProvider:
+    """
+    Base schema provider. Used to generate schema template
+    based on provided attributes.
+
+    Basically ``SchemaProvider`` only need ``schema_template`` to generate
+    some schema template. Format of ``schema_template`` must look like:
+    - {'origin': dict, 'args': []}
+    - {'origin': dict, 'args': [str, int]}
+    - {'origin': list, 'args': [], 'inner': {'origin': dict, 'args': [str, int]}}
+
+    Example:
+        >>> SchemaProvider(schema_template={'origin': dict, 'args': []}).get_schema()
+        {'type': 'object'}
+
+        >>> SchemaProvider(schema_template={'origin': dict, 'args': [str, int]}).get_schema()
+        {'type': 'object', 'additionalProperties': {'type': 'number'}}
+    """
+
     UNION = 'union'
     ANY_OF = 'anyOf'
     ITEMS = 'items'
@@ -25,6 +43,8 @@ class SchemaProvider:
             le: float = None,
             max_items: int = None,
             min_items: int = None,
+            title: str = None,
+            description: str = None
     ):
         self._schema_template = schema_template
         self._template = {}
@@ -38,10 +58,45 @@ class SchemaProvider:
         self._ge = ge
         self._lt = lt
         self._le = le
+        self._title = title
+        self._description = description
 
         self._args = self._schema_template.get(ARGS)
         self._inner = self._schema_template.get(INNER)
         self._origin = self._schema_template.get(ORIGIN)
+
+    def _ensure_not_uninon(self) -> bool:
+        return (self._origin != self.UNION) and (self._origin is not None)
+
+    def _validate_for_int_float(self):
+        any_gt_lt = any((self._gt, self._ge, self._lt, self._le))
+
+        if (self._origin == self.UNION) and any_gt_lt:
+            raise SchemaException(f'Attempt to use "gt"/"ge"/"lt"/"le" on non Decimal field "{self._origin}"')
+
+        if self._ensure_not_uninon():
+            if (not issubclass(self._origin, (int, float))) and any_gt_lt:
+                raise SchemaException(f'Attempt to use "gt"/"ge"/"lt"/"le" on non Decimal field "{self._origin}"')
+
+        if (self._gt is not None) and (self._ge is not None):
+            raise SchemaException('Properties "gt" and "ge" can not be used at the same time')
+
+        if (self._lt is not None) and (self._le is not None):
+            raise SchemaException('Properties "lt" and "le" can not be used at the same time')
+
+    def _validate_for_str(self):
+        any_length = any((self._max_length, self._min_length))
+
+        if (self._origin == self.UNION) and any_length:
+            raise SchemaException(f'Attempt to use "max_length"/"min_length"" on non String field "{self._origin}"')
+
+        if self._ensure_not_uninon():
+            if (not issubclass(self._origin, str)) and any((self._max_length, self._min_length)):
+                raise SchemaException(f'Attempt to use "max_length"/"min_length"" on non String field "{self._origin}"')
+
+    def __validate_default_values(self):
+        self._validate_for_int_float()
+        self._validate_for_str()
 
     def __apply_default_values(self):
         if self._choices is not None:
@@ -53,17 +108,11 @@ class SchemaProvider:
         if self._min_length is not None:
             self._template['minLength'] = self._min_length
 
-        if (self._gt is not None) and (self._ge is not None):
-            raise SchemaException('Properties "gt" and "ge" can not be used at the same time')
-
         if self._gt is not None:
             self._template['exclusiveMinimum'] = self._gt
 
         if self._ge is not None:
             self._template['minimum'] = self._ge
-
-        if (self._lt is not None) and (self._le is not None):
-            raise SchemaException('Properties "lt" and "le" can not be used at the same time')
 
         if self._lt is not None:
             self._template['exclusiveMaximum'] = self._lt
@@ -88,7 +137,7 @@ class SchemaProvider:
 
         return self.__get_type(original_type)
 
-    def __go_for_object(self):
+    def _go_for_object(self):
         if (not self._args) and (len(self._args) != 2):
             return
 
@@ -98,7 +147,7 @@ class SchemaProvider:
         else:
             self._template[self.ADDITIONAL_PROPERTIES] = self.__safely_get_type(self._args[1])
 
-    def __go_for_array(self):
+    def _go_for_array(self):
         self._template[self.ITEMS] = {}
 
         if self._inner:
@@ -107,7 +156,7 @@ class SchemaProvider:
         if self._args:
             self._template[self.ITEMS] = self.__safely_get_type(self._args[0])
 
-    def __go_for_tuple(self):
+    def _go_for_tuple(self):
         if (self._min_items is not None) or (self._max_items is not None):
             raise SchemaException('Properties "min_items" and "max_items" can not be used with "tuple"')
 
@@ -119,7 +168,7 @@ class SchemaProvider:
             self._template[self.MAX_ITEMS] = len(self._args)
             self._template[self.ITEMS] = [self.__safely_get_type(arg) for arg in self._args]
 
-    def __go_for_union(self):
+    def _go_for_union(self):
         self._template[self.ANY_OF] = [self.__safely_get_type(arg) for arg in self._args]
 
         if self._inner:
@@ -128,10 +177,11 @@ class SchemaProvider:
 
         return self._template
 
-    def __go_for_model(self):
+    def _go_for_model(self):
         self._template = self._origin.manager.to_schema
 
     def get_schema(self):
+        self.__validate_default_values()
         self.__apply_default_values()
 
         type_name = TYPE_NAMES.get(self._origin, None)
@@ -142,18 +192,18 @@ class SchemaProvider:
             return self._template
 
         if self._origin == self.UNION:
-            return self.__go_for_union()
+            return self._go_for_union()
 
         if isinstance(self._origin, Meta):
-            self.__go_for_model()
+            self._go_for_model()
 
         if issubclass(self._origin, list):
-            self.__go_for_array()
+            self._go_for_array()
 
         if issubclass(self._origin, tuple):
-            self.__go_for_tuple()
+            self._go_for_tuple()
 
         if issubclass(self._origin, dict):
-            self.__go_for_object()
+            self._go_for_object()
 
         return self._template

@@ -235,14 +235,15 @@ class ModelManager:
         """
         original_fields = self.__fields_as_original().items()
         return {
+            "title": self._model,
             "type": "object",
             "properties": {
                 field.json: field.get_schema for _, field in original_fields
                 if field.json is not None
             },
             "required": [
-                value.json for key, value in original_fields
-                if (value.json is not None) and (not value.is_related)
+                value.json for _, value in original_fields
+                if (value.json is not None) and (not value.is_optional) and (not value.is_related)
             ]
         }
 

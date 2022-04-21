@@ -15,7 +15,8 @@ class TestSchemaTyping:
             'origin': list,
             'args': [],
             'inner': {'origin': dict, 'args': [str], 'inner': {'origin': 'union', 'args': [int, str]}}
-        })
+        }),
+        (None, {'args': [], 'origin': None})
     ])
     def test_resolve_typing(self, annotation, template):
         assert resolve_typing(annotation) == template

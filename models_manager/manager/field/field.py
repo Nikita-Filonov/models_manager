@@ -9,6 +9,8 @@ from models_manager.schema.schema_typing import resolve_typing
 class Field:
 
     def __init__(self, json: str = None,
+                 title: str = None,
+                 description: str = None,
                  max_length: int = None,
                  min_length: int = None,
                  max_items: int = None,
@@ -21,6 +23,7 @@ class Field:
                  only_json: bool = False,
                  is_related: bool = False,
                  related_to=None,
+                 optional: bool = False,
                  value: GenericTypes = None,
                  choices: GenericChoices = None,
                  category: GenericCategories = str,
@@ -36,12 +39,15 @@ class Field:
         self.min_length = min_length
         self.max_items = max_items
         self.min_items = min_items
+        self.title = title
+        self.description = description
         self.default = default
         self.only_json = only_json
         self.category = category
         self.is_related = is_related
         self.choices = choices
         self.related_to = related_to
+        self.optional = optional
 
     @property
     def value(self) -> GenericTypes:
@@ -138,6 +144,10 @@ class Field:
         return self.json
 
     @property
+    def is_optional(self) -> bool:
+        return self.optional
+
+    @property
     def get_schema(self) -> Union[Dict[str, int], Dict[str, Union[list, tuple]], Dict[str, Union[List[str], str]]]:
         """
         Used to get schema properties template for certain field.
@@ -176,7 +186,9 @@ class Field:
             lt=self.lt,
             le=self.le,
             max_items=self.max_items,
-            min_items=self.min_items
+            min_items=self.min_items,
+            title=self.title,
+            description=self.description
         )
         return schema_provider.get_schema()
 
