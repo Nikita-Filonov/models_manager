@@ -56,7 +56,7 @@ class Field:
             choices = ', '.join(map(str, self.choices))
             raise FieldException(f'The "{self.json}" field must be one of the {choices}, but {value} was received')
 
-        self._value = self.category(value)
+        self._value = None if self.is_nullable and (value is None) else self.category(value)
 
     @property
     def get_default(self) -> GenericTypes:

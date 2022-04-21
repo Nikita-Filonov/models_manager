@@ -50,7 +50,7 @@ class QuerySet:
     def __map_to_identity(self) -> tuple:
         """Return tuple of instances identities"""
         try:
-            return tuple(getattr(instance, self._identity) for instance in self._instances)
+            return tuple(getattr(instance, self._identity).value for instance in self._instances)
         except TypeError:
             raise QuerySetOperationError(
                 'Could not find "identity" attribute. '
