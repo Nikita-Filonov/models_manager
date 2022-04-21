@@ -1,15 +1,22 @@
 from typing import Union, Dict, List
 
-from models_manager.constants import TYPE_NAMES
 from models_manager.manager.exeptions import FieldException
 from models_manager.manager.field.typing import GenericTypes, GenericCategories, SUPPORTED_TYPES, GenericChoices
 from models_manager.providers.provider import Provider, NegativeValuesProvider
+from models_manager.schema.schema_typing import resolve_typing
 
 
 class Field:
 
     def __init__(self, json: str = None,
                  max_length: int = None,
+                 min_length: int = None,
+                 max_items: int = None,
+                 min_items: int = None,
+                 gt: float = None,
+                 ge: float = None,
+                 lt: float = None,
+                 le: float = None,
                  null: bool = False,
                  only_json: bool = False,
                  is_related: bool = False,
@@ -21,7 +28,14 @@ class Field:
         self.json = json
         self.null = null
         self._value = value
+        self.gt = gt
+        self.ge = ge
+        self.lt = lt
+        self.le = le
         self.max_length = max_length
+        self.min_length = min_length
+        self.max_items = max_items
+        self.min_items = min_items
         self.default = default
         self.only_json = only_json
         self.category = category
@@ -149,29 +163,22 @@ class Field:
         >>> object_id.get_schema
         {'type': ['string', 'null']}
         """
-        if self.related_to is not None:
-            if not hasattr(self.related_to, 'manager'):
-                raise FieldException('The property "related_to" should be Model instance')
+        from models_manager.schema.provider import SchemaProvider  # no qa
 
-            if issubclass(self.category, (list, tuple)):
-                return self.related_to.manager.to_array_schema
-
-            if issubclass(self.category, dict):
-                return self.related_to.manager.to_schema
-
-            raise FieldException('For Model only dict, list, tuple categories is supported')
-
-        field_type = TYPE_NAMES[self.category]
-        field_type_safe_null = [field_type, 'null'] if (self.is_nullable or self.is_related) else field_type
-        template = {"type": field_type_safe_null}
-
-        if self.choices is not None:
-            template = {**template, 'enum': self.choices}
-
-        if self.max_length is not None:
-            template = {**template, 'minLength': 0, 'maxLength': self.max_length}
-
-        return template
+        schema_template = resolve_typing(self.category)
+        schema_provider = SchemaProvider(
+            schema_template=schema_template,
+            choices=self.choices,
+            max_length=self.max_length,
+            min_length=self.min_length,
+            gt=self.gt,
+            ge=self.ge,
+            lt=self.lt,
+            le=self.le,
+            max_items=self.max_items,
+            min_items=self.min_items
+        )
+        return schema_provider.get_schema()
 
     def get_negative_values(self, provider: Provider = None) -> GenericTypes:
         """

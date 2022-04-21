@@ -38,3 +38,7 @@ class QuerySetOperationError(Exception):
 
 class ProviderException(Exception):
     pass
+
+
+class SchemaException(Exception):
+    pass

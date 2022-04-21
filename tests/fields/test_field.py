@@ -1,7 +1,9 @@
+from typing import Optional, List, Dict, Union, Tuple
+
 import pytest
 
 from models_manager import Field
-from models_manager.manager.exeptions import FieldException
+from models_manager.manager.exeptions import FieldException, SchemaException
 from models_manager.manager.field.typing import SUPPORTED_TYPES
 from models_manager.utils import random_string
 from tests.model import DefaultChoices
@@ -58,16 +60,42 @@ class TestField:
         assert callable(field.default)
 
     @pytest.mark.parametrize('arguments, schema', [
-        ({'max_length': 255, 'category': str}, {'type': 'string', 'minLength': 0, 'maxLength': 255}),
-        ({'category': str, 'null': True}, {'type': ['string', 'null']}),
+        (
+                {'max_length': 255, 'min_length': 100, 'category': str},
+                {'maxLength': 255, 'minLength': 100, 'type': 'string'}
+        ),
         ({'category': int}, {'type': 'number'}),
         ({'category': float}, {'type': 'number'}),
-        ({'category': list}, {'type': 'array'}),
+        ({'category': list}, {'type': 'array', 'items': {}}),
         ({'category': tuple}, {'type': 'array'}),
         ({'category': dict}, {'type': 'object'}),
         ({'category': bool}, {'type': 'boolean'}),
         ({'category': None}, {'type': 'null'}),
+        ({'category': Optional[int]}, {'anyOf': [{'type': 'number'}, 'null']}),
+        ({'category': Optional[str]}, {'anyOf': [{'type': 'string'}, 'null']}),
+        ({'category': Optional[list]}, {'anyOf': [{'type': 'array'}, 'null']}),
+        ({'category': List[str]}, {'type': 'array', 'items': {'type': 'string'}}),
+        (
+                {'category': Dict[str, Union[int, bool]]},
+                {'type': 'object', 'additionalProperties': {'anyOf': [{'type': 'number'}, {'type': 'boolean'}]}}
+        ),
+        ({'category': Union[str, int, bool]}, {'anyOf': [{'type': 'string'}, {'type': 'number'}, {'type': 'boolean'}]}),
+        (
+                {'category': Tuple[int, str, list]},
+                {
+                    'type': 'array',
+                    'minItems': 3,
+                    'maxItems': 3,
+                    'items': [{'type': 'number'}, {'type': 'string'}, {'type': 'array'}]
+                }
+        )
     ], ids=lambda param: str(param))
     def test_field_get_schema(self, arguments, schema):
         field = Field(json='some', **arguments)
         assert field.get_schema == schema
+
+    @pytest.mark.parametrize('items', [{'max_items': 10}, {'min_items': 0}, {'max_items': 0, 'min_items': 10}])
+    def test_filed_tuple_category_with_max_or_min_items(self, items):
+        field = Field(json='some', **items, category=tuple)
+        with pytest.raises(SchemaException):
+            field.get_schema
