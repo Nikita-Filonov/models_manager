@@ -72,7 +72,9 @@ class ModelManager:
             if isinstance(value, Field) and field.startswith('_meta'):
                 original_field = field.replace('_meta__', '')
                 try:
-                    kwargs[field].value = kwargs[original_field]
+                    new_value = kwargs[original_field]
+                    kwargs[original_field] = deepcopy(value)
+                    kwargs[original_field].value = new_value
                 except KeyError:
                     logging.error(f'Unable to resolve field "{field}". Skipped')
 
