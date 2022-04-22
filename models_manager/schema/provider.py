@@ -2,10 +2,12 @@ from models_manager.constants import TYPE_NAMES
 from models_manager.manager.exeptions import SchemaException
 from models_manager.manager.field.typing import GenericChoices
 from models_manager.manager.model import Meta
+from models_manager.schema.context import SchemaContext
 from models_manager.schema.schema_typing import ORIGIN, ARGS, INNER
+from models_manager.schema.validator import SchemaValidator
 
 
-class SchemaProvider:
+class SchemaProvider(SchemaValidator):
     """
     Base schema provider. Used to generate schema template
     based on provided attributes.
@@ -24,13 +26,6 @@ class SchemaProvider:
         {'type': 'object', 'additionalProperties': {'type': 'number'}}
     """
 
-    UNION = 'union'
-    ANY_OF = 'anyOf'
-    ITEMS = 'items'
-    ADDITIONAL_PROPERTIES = 'additionalProperties'
-    MIN_ITEMS = 'minItems'
-    MAX_ITEMS = 'maxItems'
-
     def __init__(
             self,
             schema_template: dict,
@@ -46,79 +41,44 @@ class SchemaProvider:
             title: str = None,
             description: str = None
     ):
-        self._schema_template = schema_template
-        self._template = {}
+        super().__init__(
+            schema_template=schema_template,
+            choices=choices,
+            max_length=max_length,
+            min_length=min_length,
+            gt=gt,
+            ge=ge,
+            lt=lt,
+            le=le,
+            max_items=max_items,
+            min_items=min_items,
+            title=title,
+            description=description
+        )
 
-        self._choices = choices
-        self._max_length = max_length
-        self._min_length = min_length
-        self._max_items = max_items
-        self._min_items = min_items
-        self._gt = gt
-        self._ge = ge
-        self._lt = lt
-        self._le = le
-        self._title = title
-        self._description = description
+        self._template = {}
+        self._context = SchemaContext()
 
         self._args = self._schema_template.get(ARGS)
         self._inner = self._schema_template.get(INNER)
         self._origin = self._schema_template.get(ORIGIN)
 
-    def _ensure_not_uninon(self) -> bool:
-        return (self._origin != self.UNION) and (self._origin is not None)
-
-    def _validate_for_int_float(self):
-        any_gt_lt = any((self._gt, self._ge, self._lt, self._le))
-
-        if (self._origin == self.UNION) and any_gt_lt:
-            raise SchemaException(f'Attempt to use "gt"/"ge"/"lt"/"le" on non Decimal field "{self._origin}"')
-
-        if self._ensure_not_uninon():
-            if (not issubclass(self._origin, (int, float))) and any_gt_lt:
-                raise SchemaException(f'Attempt to use "gt"/"ge"/"lt"/"le" on non Decimal field "{self._origin}"')
-
-        if (self._gt is not None) and (self._ge is not None):
-            raise SchemaException('Properties "gt" and "ge" can not be used at the same time')
-
-        if (self._lt is not None) and (self._le is not None):
-            raise SchemaException('Properties "lt" and "le" can not be used at the same time')
-
-    def _validate_for_str(self):
-        any_length = any((self._max_length, self._min_length))
-
-        if (self._origin == self.UNION) and any_length:
-            raise SchemaException(f'Attempt to use "max_length"/"min_length"" on non String field "{self._origin}"')
-
-        if self._ensure_not_uninon():
-            if (not issubclass(self._origin, str)) and any((self._max_length, self._min_length)):
-                raise SchemaException(f'Attempt to use "max_length"/"min_length"" on non String field "{self._origin}"')
-
     def __validate_default_values(self):
+        self._validate_for_common()
         self._validate_for_int_float()
         self._validate_for_str()
+        self._validate_for_list_tuple()
 
     def __apply_default_values(self):
-        if self._choices is not None:
-            self._template['enum'] = self._choices
-
-        if self._max_length is not None:
-            self._template['maxLength'] = self._max_length
-
-        if self._min_length is not None:
-            self._template['minLength'] = self._min_length
-
-        if self._gt is not None:
-            self._template['exclusiveMinimum'] = self._gt
-
-        if self._ge is not None:
-            self._template['minimum'] = self._ge
-
-        if self._lt is not None:
-            self._template['exclusiveMaximum'] = self._lt
-
-        if self._le is not None:
-            self._template['maximum'] = self._le
+        self._context.choices = self._choices
+        self._context.max_length = self._max_length
+        self._context.min_length = self._min_length
+        self._context.gt = self._gt
+        self._context.ge = self._ge
+        self._context.lt = self._lt
+        self._context.le = self._le
+        self._context.min_items = self._min_items
+        self._context.max_items = self._max_items
 
     @classmethod
     def __get_type(cls, original_type):
@@ -143,53 +103,55 @@ class SchemaProvider:
 
         if self._inner:
             inner_template = SchemaProvider(self._inner).get_schema()
-            self._template[self.ADDITIONAL_PROPERTIES] = inner_template
+            self._context.additional_properties = inner_template
         else:
-            self._template[self.ADDITIONAL_PROPERTIES] = self.__safely_get_type(self._args[1])
+            self._context.additional_properties = self.__safely_get_type(self._args[1])
 
     def _go_for_array(self):
-        self._template[self.ITEMS] = {}
+        self._context.items = {}
 
         if self._inner:
-            self._template[self.ITEMS] = SchemaProvider(self._inner).get_schema()
+            self._context.items = SchemaProvider(self._inner).get_schema()
 
         if self._args:
-            self._template[self.ITEMS] = self.__safely_get_type(self._args[0])
+            self._context.items = self.__safely_get_type(self._args[0])
 
     def _go_for_tuple(self):
+        # TODO проверить нужность этой проверки
         if (self._min_items is not None) or (self._max_items is not None):
             raise SchemaException('Properties "min_items" and "max_items" can not be used with "tuple"')
 
         if self._inner:
-            self._template[self.ITEMS] = SchemaProvider(self._inner).get_schema()
+            self._context.items = SchemaProvider(self._inner).get_schema()
 
         if self._args:
-            self._template[self.MIN_ITEMS] = len(self._args)
-            self._template[self.MAX_ITEMS] = len(self._args)
-            self._template[self.ITEMS] = [self.__safely_get_type(arg) for arg in self._args]
+            self._context.min_items = self._min_items or len(self._args)
+            self._context.max_items = self._max_items or len(self._args)
+            self._context.items = [self.__safely_get_type(arg) for arg in self._args]
 
     def _go_for_union(self):
-        self._template[self.ANY_OF] = [self.__safely_get_type(arg) for arg in self._args]
+        self._context.any_of = [self.__safely_get_type(arg) for arg in self._args]
 
         if self._inner:
             inner_template = SchemaProvider(self._inner).get_schema()
-            self._template[self.ANY_OF] = [*self._template[self.ANY_OF], inner_template]
+            self._context.any_of = [*self._context.any_of, inner_template]
 
-        return self._template
+        return self._context.template
 
     def _go_for_model(self):
-        self._template = self._origin.manager.to_schema
+        self._context.template = self._origin.manager.to_schema
 
     def get_schema(self):
         self.__validate_default_values()
         self.__apply_default_values()
 
+        # TODO проерить этот кусок кода, возможно можно заюзать __get_type
         type_name = TYPE_NAMES.get(self._origin, None)
         if type_name is not None:
-            self._template['type'] = TYPE_NAMES[self._origin]
+            self._context.type = TYPE_NAMES[self._origin]
 
         if self._origin is None:
-            return self._template
+            return self._context.template
 
         if self._origin == self.UNION:
             return self._go_for_union()
@@ -206,4 +168,4 @@ class SchemaProvider:
         if issubclass(self._origin, dict):
             self._go_for_object()
 
-        return self._template
+        return self._context.template
