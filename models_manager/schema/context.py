@@ -12,6 +12,7 @@ class SchemaContext:
     GE = 'minimum'
     LT = 'exclusiveMaximum'
     LE = 'maximum'
+    NULL = 'null'
 
     __slots__ = (
         'choices',
@@ -32,8 +33,19 @@ class SchemaContext:
         'type'
     )
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._template = {}
+
+        self._apply_kwargs(**kwargs)
+
+    def _apply_kwargs(self, **kwargs):
+        for attribute in self.__slots__:
+            value = kwargs.get(attribute)
+
+            if value is None:
+                continue
+
+            setattr(self, attribute, value)
 
     @property
     def template(self):

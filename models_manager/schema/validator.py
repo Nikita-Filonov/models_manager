@@ -1,6 +1,12 @@
+from typing import Iterable
+
 from models_manager.manager.exeptions import SchemaException
 from models_manager.manager.field.typing import GenericChoices
 from models_manager.schema.schema_typing import ARGS, INNER, ORIGIN
+
+
+def safe_any(iterable: Iterable):
+    return any((item is not None) for item in iterable)
 
 
 class SchemaValidator:
@@ -43,9 +49,9 @@ class SchemaValidator:
         return (self._origin != self.UNION) and (self._origin is not None)
 
     def _validate_for_str(self):
-        any_length = any((self._max_length, self._min_length))
+        any_length = safe_any((self._max_length, self._min_length))
 
-        if (self._origin == self.UNION) and any_length:
+        if (not self._ensure_not_union()) and any_length:
             raise SchemaException(f'Attempt to use "max_length"/"min_length"" on non String field "{self._origin}"')
 
         if self._ensure_not_union():
@@ -53,9 +59,9 @@ class SchemaValidator:
                 raise SchemaException(f'Attempt to use "max_length"/"min_length"" on non String field "{self._origin}"')
 
     def _validate_for_int_float(self):
-        any_gt_lt = any((self._gt, self._ge, self._lt, self._le))
+        any_gt_lt = safe_any((self._gt, self._ge, self._lt, self._le))
 
-        if (self._origin == self.UNION) and any_gt_lt:
+        if (not self._ensure_not_union()) and any_gt_lt:
             raise SchemaException(f'Attempt to use "gt"/"ge"/"lt"/"le" on non Decimal field "{self._origin}"')
 
         if self._ensure_not_union():
@@ -74,8 +80,8 @@ class SchemaValidator:
                 raise SchemaException('Choices must be Tuple or an Array with enum of values')
 
     def _validate_for_list_tuple(self):
-        any_items = any((self._min_items, self._max_items))
-        if (self._origin == self.UNION) and any_items:
+        any_items = safe_any((self._min_items, self._max_items))
+        if (not self._ensure_not_union()) and any_items:
             raise SchemaException(f'Attempt to use "min_items"/"max_items" on non Array/Tuple filed "{self._origin}"')
 
         if self._ensure_not_union():

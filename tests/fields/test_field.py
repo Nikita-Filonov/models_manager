@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Union, Tuple
 import pytest
 
 from models_manager import Field
-from models_manager.manager.exeptions import FieldException, SchemaException
+from models_manager.manager.exeptions import FieldException
 from models_manager.manager.field.typing import SUPPORTED_TYPES
 from models_manager.utils import random_string
 from tests.model import DefaultChoices
@@ -64,6 +64,10 @@ class TestField:
                 {'max_length': 255, 'min_length': 100, 'category': str},
                 {'maxLength': 255, 'minLength': 100, 'type': 'string'}
         ),
+        ({'category': int, 'le': 0, 'gt': 10}, {'exclusiveMinimum': 10, 'maximum': 0, 'type': 'number'}),
+        ({'category': int, 'lt': 0, 'gt': 10}, {'exclusiveMaximum': 0, 'exclusiveMinimum': 10, 'type': 'number'}),
+        ({'category': int, 'le': 0, 'ge': 10}, {'maximum': 0, 'minimum': 10, 'type': 'number'}),
+        ({'category': int, 'le': 0, 'gt': 10}, {'exclusiveMinimum': 10, 'maximum': 0, 'type': 'number'}),
         ({'category': int}, {'type': 'number'}),
         ({'category': float}, {'type': 'number'}),
         ({'category': list}, {'type': 'array', 'items': {}}),
@@ -93,9 +97,3 @@ class TestField:
     def test_field_get_schema(self, arguments, schema):
         field = Field(json='some', **arguments)
         assert field.get_schema == schema
-
-    @pytest.mark.parametrize('items', [{'max_items': 10}, {'min_items': 0}, {'max_items': 0, 'min_items': 10}])
-    def test_filed_tuple_category_with_max_or_min_items(self, items):
-        field = Field(json='some', **items, category=tuple)
-        with pytest.raises(SchemaException):
-            field.get_schema

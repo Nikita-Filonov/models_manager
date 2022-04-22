@@ -39,7 +39,7 @@ class SchemaProvider(SchemaValidator):
             max_items: int = None,
             min_items: int = None,
             title: str = None,
-            description: str = None
+            description: str = None,
     ):
         super().__init__(
             schema_template=schema_template,
@@ -89,11 +89,12 @@ class SchemaProvider(SchemaValidator):
         if isinstance(original_type, Meta):
             return cls({ORIGIN: original_type}).get_schema()
 
-        return 'null'
+        return SchemaContext.NULL
 
     def __safely_get_type(self, original_type):
         if TYPE_NAMES.get(original_type):
-            return {'type': self.__get_type(original_type)}
+            context = SchemaContext(type=self.__get_type(original_type))
+            return context.template
 
         return self.__get_type(original_type)
 
@@ -117,7 +118,6 @@ class SchemaProvider(SchemaValidator):
             self._context.items = self.__safely_get_type(self._args[0])
 
     def _go_for_tuple(self):
-        # TODO проверить нужность этой проверки
         if (self._min_items is not None) or (self._max_items is not None):
             raise SchemaException('Properties "min_items" and "max_items" can not be used with "tuple"')
 
@@ -145,7 +145,6 @@ class SchemaProvider(SchemaValidator):
         self.__validate_default_values()
         self.__apply_default_values()
 
-        # TODO проерить этот кусок кода, возможно можно заюзать __get_type
         type_name = TYPE_NAMES.get(self._origin, None)
         if type_name is not None:
             self._context.type = TYPE_NAMES[self._origin]
