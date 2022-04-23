@@ -6,7 +6,7 @@ from models_manager import Field
 from models_manager.manager.exeptions import FieldException
 from models_manager.manager.field.typing import SUPPORTED_TYPES
 from models_manager.utils import random_string
-from tests.model import DefaultChoices
+from tests.model import DefaultChoices, DefaultModel
 
 
 @pytest.mark.field
@@ -91,6 +91,51 @@ class TestField:
                     'minItems': 3,
                     'maxItems': 3,
                     'items': [{'type': 'number'}, {'type': 'string'}, {'type': 'array'}]
+                }
+        ),
+        (
+                {'category': DefaultModel},
+                {
+                    'properties': {
+                        'email': {'type': 'string'},
+                        'firstName': {'type': 'string'},
+                        'id': {'type': 'number'}
+                    },
+                    'required': ['id', 'firstName', 'email'],
+                    'title': 'DefaultModel',
+                    'type': 'object'
+                }
+        ),
+        (
+                {'category': List[DefaultModel]},
+                {
+                    'items': {
+                        'properties': {
+                            'email': {'type': 'string'},
+                            'firstName': {'type': 'string'},
+                            'id': {'type': 'number'}
+                        },
+                        'required': ['id', 'firstName', 'email'],
+                        'title': 'DefaultModel',
+                        'type': 'object'
+                    },
+                    'type': 'array'
+                }
+        ),
+        (
+                {'category': Dict[str, DefaultModel]},
+                {
+                    'additionalProperties': {
+                        'properties': {
+                            'email': {'type': 'string'},
+                            'firstName': {'type': 'string'},
+                            'id': {'type': 'number'}
+                        },
+                        'required': ['id', 'firstName', 'email'],
+                        'title': 'DefaultModel',
+                        'type': 'object'
+                    },
+                    'type': 'object'
                 }
         )
     ], ids=lambda param: str(param))

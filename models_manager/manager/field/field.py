@@ -1,7 +1,7 @@
 from typing import Union, Dict, List
 
 from models_manager.manager.exeptions import FieldException
-from models_manager.manager.field.typing import GenericTypes, GenericCategories, SUPPORTED_TYPES, GenericChoices
+from models_manager.manager.field.typing import GenericTypes, GenericCategories, GenericChoices, SUPPORTED_TYPES
 from models_manager.providers.provider import Provider, NegativeValuesProvider
 from models_manager.schema.schema_typing import resolve_typing
 
@@ -76,7 +76,7 @@ class Field:
             choices = ', '.join(map(str, self.choices))
             raise FieldException(f'The "{self.json}" field must be one of the {choices}, but {value} was received')
 
-        self._value = self.category(value)
+        self._value = value
 
     @property
     def get_default(self) -> GenericTypes:
@@ -115,8 +115,8 @@ class Field:
         []
 
         """
-        if not issubclass(self.category, SUPPORTED_TYPES):
-            raise FieldException(f'Category type of "{self.category}" is not supported.')
+        # if not issubclass(self.category, SUPPORTED_TYPES):
+        #     raise FieldException(f'Category type of "{self.category}" is not supported.')
 
         if self.default is None:
             return
