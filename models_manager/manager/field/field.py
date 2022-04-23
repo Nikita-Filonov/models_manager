@@ -1,7 +1,9 @@
-from typing import Union, Dict, List
+from typing import Union, Dict, List, Any
+
+from jsonschema import validate
 
 from models_manager.manager.exeptions import FieldException
-from models_manager.manager.field.typing import GenericTypes, GenericCategories, GenericChoices, SUPPORTED_TYPES
+from models_manager.manager.field.typing import GenericTypes, GenericCategories, GenericChoices
 from models_manager.providers.provider import Provider, NegativeValuesProvider
 from models_manager.schema.schema_typing import resolve_typing
 
@@ -49,6 +51,11 @@ class Field:
         self.related_to = related_to
         self.optional = optional
 
+        self._typing_template = resolve_typing(self.category)
+
+    def _ensure_value_valid(self, value: Any):
+        validate(instance=value, schema=self.get_schema)
+
     @property
     def value(self) -> GenericTypes:
         """
@@ -68,7 +75,13 @@ class Field:
         >>> name.value
         'another'
         """
-        return self.get_default if self._value is None else self._value
+        from models_manager.json.provider import JsonProvider  # no qa
+
+        safe_value = self.get_default if self._value is None else self._value
+        value = JsonProvider(schema_template=self._typing_template, original_value=safe_value).get_value()
+
+        self._ensure_value_valid(value)
+        return value
 
     @value.setter
     def value(self, value):
@@ -115,13 +128,10 @@ class Field:
         []
 
         """
-        # if not issubclass(self.category, SUPPORTED_TYPES):
-        #     raise FieldException(f'Category type of "{self.category}" is not supported.')
-
         if self.default is None:
             return
 
-        return self.category(self.default() if callable(self.default) else self.default)
+        return self.default() if callable(self.default) else self.default
 
     def __str__(self):
         return f'<Field: {self.value}>'
@@ -175,9 +185,8 @@ class Field:
         """
         from models_manager.schema.provider import SchemaProvider  # no qa
 
-        schema_template = resolve_typing(self.category)
         schema_provider = SchemaProvider(
-            schema_template=schema_template,
+            schema_template=self._typing_template,
             choices=self.choices,
             max_length=self.max_length,
             min_length=self.min_length,
@@ -187,7 +196,7 @@ class Field:
             le=self.le,
             max_items=self.max_items,
             min_items=self.min_items,
-            title=self.title,
+            title=self.title or self.json,
             description=self.description
         )
         return schema_provider.get_schema()

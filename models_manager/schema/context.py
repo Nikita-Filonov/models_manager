@@ -13,6 +13,8 @@ class SchemaContext:
     LT = 'exclusiveMaximum'
     LE = 'maximum'
     NULL = 'null'
+    TITLE = 'title'
+    DESCRIPTION = 'description'
 
     __slots__ = (
         'choices',

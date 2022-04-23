@@ -70,6 +70,8 @@ class SchemaProvider(SchemaValidator):
         self._validate_for_list_tuple()
 
     def __apply_default_values(self):
+        self._context.title = self._title
+        self._context.description = self._description
         self._context.choices = self._choices
         self._context.max_length = self._max_length
         self._context.min_length = self._min_length
@@ -89,7 +91,7 @@ class SchemaProvider(SchemaValidator):
         if isinstance(original_type, Meta):
             return cls({ORIGIN: original_type}).get_schema()
 
-        return SchemaContext.NULL
+        return {SchemaContext.TYPE: SchemaContext.NULL}
 
     def __safely_get_type(self, original_type):
         if TYPE_NAMES.get(original_type):
