@@ -2,7 +2,6 @@ from typing import Union, Dict, List, Any
 
 from jsonschema import validate
 
-from models_manager.manager.exeptions import FieldException
 from models_manager.manager.field.typing import GenericTypes, GenericCategories, GenericChoices
 from models_manager.providers.provider import Provider, NegativeValuesProvider
 from models_manager.schema.schema_typing import resolve_typing
@@ -53,11 +52,20 @@ class Field:
 
         self._typing_template = resolve_typing(self.category)
 
-    def _ensure_value_valid(self, value: Any):
-        validate(instance=value, schema=self.get_schema)
+    def _with_ensure_value_valid(self, value: Any, json_key=False):
+        from models_manager.json.provider import JsonProvider  # no qa
+
+        provider = JsonProvider(schema_template=self._typing_template, original_value=value, json_key=json_key)
+        dict_value = provider.get_value()
+        validate(instance=dict_value, schema=self.get_schema)
+
+        return dict_value
+
+    def dict(self, json_key=False):
+        return self._with_ensure_value_valid(self.value, json_key=json_key)
 
     @property
-    def value(self) -> GenericTypes:
+    def value(self) -> Any:
         """
         Returns ``value`` attribute if it is not None, else
         will return default value
@@ -75,20 +83,11 @@ class Field:
         >>> name.value
         'another'
         """
-        from models_manager.json.provider import JsonProvider  # no qa
-
-        safe_value = self.get_default if self._value is None else self._value
-        value = JsonProvider(schema_template=self._typing_template, original_value=safe_value).get_value()
-
-        self._ensure_value_valid(value)
-        return value
+        return self.get_default if self._value is None else self._value
 
     @value.setter
     def value(self, value):
-        if self.choices and value not in self.choices:
-            choices = ', '.join(map(str, self.choices))
-            raise FieldException(f'The "{self.json}" field must be one of the {choices}, but {value} was received')
-
+        self._with_ensure_value_valid(value)
         self._value = value
 
     @property
@@ -196,7 +195,7 @@ class Field:
             le=self.le,
             max_items=self.max_items,
             min_items=self.min_items,
-            title=self.title or self.json,
+            title=self.title,
             description=self.description
         )
         return schema_provider.get_schema()

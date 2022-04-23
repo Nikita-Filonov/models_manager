@@ -1,6 +1,7 @@
 import functools
 import logging
 import re
+import warnings
 from random import choice, randint
 from string import ascii_letters, digits
 from time import sleep
@@ -162,3 +163,27 @@ def normalize_model(model) -> str:
     """
     model_parts = re.findall('[A-Z][^A-Z]*', model)
     return '_'.join([part.lower() for part in model_parts])
+
+
+def deprecated(message):
+    """
+    This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used.
+    """
+
+    def inner(func):
+        @functools.wraps(func)
+        def new_func(*args, **kwargs):
+            warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+            warnings.warn(
+                f"Call to deprecated function {func.__name__}. {message}",
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            warnings.simplefilter('default', DeprecationWarning)  # reset filter
+            return func(*args, **kwargs)
+
+        return new_func
+
+    return inner

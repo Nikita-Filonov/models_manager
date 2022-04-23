@@ -8,7 +8,7 @@ from models_manager.manager.field.field import Field
 from models_manager.manager.query.builder import get_query
 from models_manager.manager.query_set import QuerySet
 from models_manager.providers.provider import Provider
-from models_manager.utils import normalize_model, serializer, dump_value, dump_fields, binding
+from models_manager.utils import normalize_model, serializer, dump_value, dump_fields, binding, deprecated
 
 connection = Connect()
 
@@ -149,6 +149,7 @@ class ModelManager:
         return self.__fields_as_original(json_key)
 
     @property
+    @deprecated('Use "to_dict" instead')
     def to_json(self) -> dict:
         """
         Returns json payload. To return field in json,
@@ -163,6 +164,11 @@ class ModelManager:
             for value in self.__fields_as_original().values()
             if value.json is not None
         }
+
+    def to_dict(self, json_key=True) -> dict:
+        fields = self.__fields_as_original()
+        without_empty_json = filter(lambda args: args[1].json is not None, fields.items())
+        return {(field.json if json_key else name): field.dict(json_key) for name, field in without_empty_json}
 
     def to_negative_json(self, fields: Union[List[Field], Tuple[Field]] = None, provider: Provider = None) -> dict:
         """

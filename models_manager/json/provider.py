@@ -4,10 +4,12 @@ from typing import Union, Any
 from models_manager import Model
 from models_manager.manager.model import Meta
 from models_manager.schema.schema_typing import ARGS, INNER, ORIGIN
+from models_manager.schema.validator import SchemaValidator
 
 
 class JsonProvider:
-    def __init__(self, schema_template: dict, original_value, inner=False):
+    def __init__(self, schema_template: dict, original_value, json_key=False, inner=False):
+        self._json_key = json_key
         self._schema_template = schema_template
         self._original_value = original_value if inner else deepcopy(original_value)
 
@@ -18,16 +20,16 @@ class JsonProvider:
     def _analyze_model(self, value: Union[Any, Model], key=None):
         if isinstance(value, Model):
             if key is None:
-                self._original_value = value.manager.to_json
+                self._original_value = value.manager.to_dict(json_key=self._json_key)
             else:
-                self._original_value[key] = value.manager.to_json
+                self._original_value[key] = value.manager.to_dict(json_key=self._json_key)
 
         try:
             if issubclass(value, Model):
                 if key is None:
-                    self._original_value = value.manager.to_json
+                    self._original_value = value.manager.to_dict(json_key=self._json_key)
                 else:
-                    self._original_value[key] = value.manager.to_json
+                    self._original_value[key] = value.manager.to_dict(json_key=self._json_key)
         except TypeError:
             pass
 
@@ -51,7 +53,7 @@ class JsonProvider:
         self._analyze_model(value=self._original_value)
 
     def get_value(self):
-        if self._origin == 'union':
+        if self._origin == SchemaValidator.UNION:
             self._go_for_union()
             return self._original_value
 

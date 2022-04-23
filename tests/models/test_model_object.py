@@ -1,4 +1,5 @@
 import pytest
+from jsonschema.exceptions import ValidationError
 
 from models_manager.utils import random_number, random_string
 from tests.model import DefaultModel, DefaultModelAttributes
@@ -32,3 +33,14 @@ class TestModelObject:
     def test_model_object_has_default_attributes(self, attribute):
         model_object = DefaultModel()
         assert hasattr(model_object, attribute)
+
+    @pytest.mark.parametrize('attributes', [
+        {DefaultModel.id.json: random_string()},
+        {DefaultModel.id.json: True},
+        {DefaultModel.id.json: []},
+        {DefaultModel.id.json: {}},
+        {DefaultModel.id.json: DefaultModel},
+    ])
+    def test_model_object_value_validation(self, attributes):
+        with pytest.raises(ValidationError):
+            DefaultModel(**attributes)

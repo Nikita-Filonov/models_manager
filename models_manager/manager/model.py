@@ -71,3 +71,6 @@ class Model(metaclass=Meta):
     def __apply_to_fields(self, field: Dict[str, Field]):
         for field_name, field in field.items():
             setattr(self, field_name, field)
+
+    def __str__(self):
+        return f'<Model: {self.__class__.__name__}>'
