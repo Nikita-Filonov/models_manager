@@ -42,3 +42,7 @@ class ProviderException(Exception):
 
 class SchemaException(Exception):
     pass
+
+
+class JsonException(Exception):
+    pass

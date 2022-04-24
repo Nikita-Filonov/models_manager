@@ -4,7 +4,6 @@ import pytest
 from jsonschema.exceptions import ValidationError
 
 from models_manager import Field
-from models_manager.manager.exeptions import FieldException
 from models_manager.utils import random_string
 from tests.model import DefaultChoices, DefaultModel
 
@@ -12,17 +11,44 @@ from tests.model import DefaultChoices, DefaultModel
 @pytest.mark.field
 class TestField:
 
-    @pytest.mark.skip(reason='Have to update logic')
-    def test_field_category(self, type_name, default):
-        field = Field(default=default, category=type_name)
+    @pytest.mark.parametrize('category, default', [
+        (int, 1),
+        (str, 'some'),
+        (list, [1, 2, 3]),
+        (tuple, (1, 2, 3)),
+        (dict, {1: 2}),
+        (List[int], [1, 2, 3]),
+        (Dict[str, bool], {'some': True}),
+        (Dict[str, int], {'some': 1}),
+        (Dict[str, Union[str, int]], {'some': 'other', 'another': 1}),
+        (Union[str, int], 1),
+        (Union[str, int], 'some'),
+        (Optional[str], None),
+        (Optional[str], 'some')
+    ])
+    def test_field_category(self, category, default):
+        field = Field(default=default, category=category)
 
-        assert field.category == type_name
-        assert field.value == type_name(field.default)
+        assert field.category == category
+        assert field.value == default
 
-    @pytest.mark.skip(reason='Have to update logic')
-    def test_field_with_not_supported_category(self):
-        field = Field(default=random_string(), category=Field)
-        with pytest.raises(FieldException):
+    @pytest.mark.parametrize('category, default', [
+        (int, 'str'),
+        (str, 1),
+        (list, {1: 2}),
+        (tuple, 'some'),
+        (List[int], ['str', 'some']),
+        (Dict[str, bool], {'some': 1}),
+        (Dict[str, int], {'some': 'other'}),
+        (Dict[str, Union[str, int]], {'some': True, 'another': []}),
+        (Union[str, int], True),
+        (Union[str, int], {1: 2}),
+        (Optional[str], {1: 2}),
+        (Optional[str], 1)
+    ])
+    def test_field_for_category_raise_validation_error(self, category, default):
+        field = Field(default=default, category=category)
+        with pytest.raises(ValidationError):
             field.value
 
     def test_field_value_getter(self):

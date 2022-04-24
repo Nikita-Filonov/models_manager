@@ -2,6 +2,7 @@ from copy import deepcopy
 from typing import Union, Any
 
 from models_manager import Model
+from models_manager.manager.exeptions import JsonException
 from models_manager.manager.model import Meta
 from models_manager.schema.schema_typing import ARGS, INNER, ORIGIN
 from models_manager.schema.validator import SchemaValidator
@@ -34,6 +35,9 @@ class JsonProvider:
             pass
 
     def _go_for_dict(self):
+        if not hasattr(self._original_value, 'items'):
+            raise JsonException(f'Unable to resolve "{self._original_value}" as Object')
+
         for key, value in self._original_value.items():
             self._analyze_model(value=value, key=key)
 

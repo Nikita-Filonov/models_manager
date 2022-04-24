@@ -88,7 +88,10 @@ class Field:
         >>> name.value
         'another'
         """
-        return self.get_default if self._value is None else self._value
+        safe_value = self.get_default if self._value is None else self._value
+        self._with_ensure_value_valid(safe_value)
+
+        return safe_value
 
     @value.setter
     def value(self, value):
