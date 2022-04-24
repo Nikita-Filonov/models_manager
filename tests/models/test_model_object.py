@@ -2,7 +2,7 @@ import pytest
 from jsonschema.exceptions import ValidationError
 
 from models_manager.utils import random_number, random_string
-from tests.model import DefaultModel, DefaultModelAttributes
+from tests.model import DefaultModel, DefaultModelAttributes, InnerModel, OuterModel
 
 
 @pytest.mark.model_object
@@ -44,3 +44,11 @@ class TestModelObject:
     def test_model_object_value_validation(self, attributes):
         with pytest.raises(ValidationError):
             DefaultModel(**attributes)
+
+    def test_model_object_for_nested_model(self):
+        inner = InnerModel(id=5)
+        outer = OuterModel(inner=inner)
+
+        assert outer.inner.value == inner
+        assert outer.inner.value.id == inner.id
+        assert outer.inner.value.id.value == inner.id.value

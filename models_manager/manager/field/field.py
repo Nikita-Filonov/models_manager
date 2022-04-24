@@ -1,4 +1,5 @@
 from typing import Union, Dict, List, Any
+from uuid import UUID
 
 from jsonschema import validate
 
@@ -57,6 +58,10 @@ class Field:
 
         provider = JsonProvider(schema_template=self._typing_template, original_value=value, json_key=json_key)
         dict_value = provider.get_value()
+
+        if isinstance(dict_value, UUID):
+            dict_value = str(dict_value)
+
         validate(instance=dict_value, schema=self.get_schema)
 
         return dict_value
