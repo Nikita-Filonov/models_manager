@@ -75,8 +75,11 @@ class ModelManager:
                     new_value = kwargs[original_field]
                     kwargs[original_field] = deepcopy(value)
                     kwargs[original_field].value = new_value
+                    setattr(self, original_field, kwargs[original_field])
                 except KeyError:
                     logging.error(f'Unable to resolve field "{field}". Skipped')
+
+                continue
 
             if isinstance(value, Field) and not field.startswith('_meta'):
                 setattr(self, f'_meta__{field}', deepcopy(value))
@@ -398,7 +401,7 @@ class ModelManager:
         """
         model = normalize_model(self._model)
         sql = f'DELETE FROM "{model}" WHERE "{model}"."{self._identity}" = %s;'
-        self._lazy_query(sql, (self.__dict__[self._identity],))
+        self._lazy_query(sql, (self.__dict__[self._identity].value,))
 
     def update(self, as_json=True, **kwargs):
         """
@@ -421,7 +424,7 @@ class ModelManager:
 
         sql = f'UPDATE "{model}" SET {values} WHERE "{model}"."{self._identity}" = %s RETURNING*;'
 
-        cursor = self._lazy_query(sql, (self.__dict__[self._identity],))
+        cursor = self._lazy_query(sql, (self.__dict__[self._identity].value,))
         result = serializer(cursor)
 
         return self.__as_json(as_json, result)
