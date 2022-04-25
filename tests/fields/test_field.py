@@ -15,7 +15,7 @@ class TestField:
         (int, 1),
         (str, 'some'),
         (list, [1, 2, 3]),
-        (tuple, (1, 2, 3)),
+        (tuple, [1, 2, 3]),
         (dict, {1: 2}),
         (List[int], [1, 2, 3]),
         (Dict[str, bool], {'some': True}),

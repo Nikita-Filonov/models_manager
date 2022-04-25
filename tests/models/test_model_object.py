@@ -8,7 +8,7 @@ from tests.model import DefaultModel, DefaultModelAttributes, InnerModel, OuterM
 @pytest.mark.model_object
 class TestModelObject:
     @pytest.mark.parametrize('json', [
-        DefaultModel.manager.to_json,
+        DefaultModel.manager.to_dict(),
         {
             DefaultModel.id.json: random_number(),
             DefaultModel.email.json: random_string(),

@@ -14,7 +14,7 @@ class TestSchemaTyping:
         (List[Dict[str, Union[int, str]]], {
             'origin': list,
             'args': [],
-            'inner': {'origin': dict, 'args': [str], 'inner': {'origin': 'union', 'args': [int, str]}}
+            'inner': {'origin': dict, 'args': [str], 'inner': {'origin': 'union', 'args': [str, int]}}
         }),
         (None, {'args': [], 'origin': None})
     ])

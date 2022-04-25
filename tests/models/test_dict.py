@@ -62,9 +62,9 @@ class TestDict:
 
         assert field.json == json_name
 
-    @pytest.mark.parametrize('payload', [model.to_json, {}])
+    @pytest.mark.parametrize('payload', [model.to_dict(), {}])
     def test_dict_object_generation(self, payload):
-        json = DefaultModel(**payload).manager.to_json
+        json = DefaultModel(**payload).manager.to_dict()
 
         assert json[DefaultModel.id.json] == DefaultModel.id.default
         assert json[DefaultModel.first_name.json] == DefaultModel.first_name.default
