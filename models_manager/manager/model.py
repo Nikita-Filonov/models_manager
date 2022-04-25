@@ -2,8 +2,8 @@ from copy import deepcopy
 from functools import reduce
 from typing import Union, Dict
 
-from models_manager import Field
-from models_manager.manager.manager import ModelManager
+from models_manager.manager.field.field import Field
+from models_manager.manager.managers.mixin import ManagerMixin
 
 
 class Meta(type):
@@ -12,7 +12,7 @@ class Meta(type):
         safe_attrs = mcs.resolve_attrs(bases, attrs)
 
         cls = type.__new__(mcs, name, bases, attrs)
-        cls.manager = ModelManager(safe_name, bases, **safe_attrs)
+        cls.manager = ManagerMixin(safe_name, bases, **safe_attrs)
 
         return cls
 
@@ -62,7 +62,7 @@ class Model(metaclass=Meta):
     extended_by = None
 
     def __init__(self, **kwargs):
-        self.manager: ModelManager = deepcopy(self.manager)
+        self.manager: ManagerMixin = deepcopy(self.manager)
         self.manager.apply_values(**kwargs)
 
         fields: Dict[str, Field] = self.manager.fields(json_key=False)

@@ -67,6 +67,10 @@ class Field:
         return dict_value
 
     def dict(self, json_key=False):
+        """
+        :param json_key:
+        :return:
+        """
         return self._with_ensure_value_valid(self.value, json_key=json_key)
 
     @property
@@ -95,7 +99,8 @@ class Field:
 
     @value.setter
     def value(self, value):
-        self._with_ensure_value_valid(value)
+        if self.json is not None:
+            self._with_ensure_value_valid(value)
         self._value = value
 
     @property
