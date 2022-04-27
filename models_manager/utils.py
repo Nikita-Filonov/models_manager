@@ -162,3 +162,10 @@ def normalize_model(model) -> str:
     """
     model_parts = re.findall('[A-Z][^A-Z]*', model)
     return '_'.join([part.lower() for part in model_parts])
+
+
+def lazy_setattr(instance, name, value, is_lazy=False):
+    if is_lazy:
+        return
+
+    setattr(instance, name, value)

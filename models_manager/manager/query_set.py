@@ -19,12 +19,13 @@ class QuerySet:
     result.delete() -> None
     """
 
-    def __init__(self, model, identity, query, mro, instances):
+    def __init__(self, model, identity, query, mro, instances, manager):
         self._model = model
         self._mro = mro
         self._instances = instances
         self._identity = identity
         self._query = query
+        self._manager = manager
 
         self._index = 0
 
@@ -46,6 +47,9 @@ class QuerySet:
     def __len__(self):
         return len(self._instances)
 
+    def __getitem__(self, item):
+        return self._instances[item]
+
     @property
     def __map_to_identity(self) -> tuple:
         """Return tuple of instances identities"""
@@ -63,10 +67,10 @@ class QuerySet:
             return result
 
         instances = [
-            type(self._model, self._mro, {**self.__dict__, **(row or {})})()
+            type(self._model, self._mro, {**self._manager.__dict__, **(row or {})})()
             for row in result
         ]
-        return QuerySet(self._model, self._identity, self._query, self._mro, instances)
+        return QuerySet(self._model, self._identity, self._query, self._mro, instances, self._manager)
 
     def count(self) -> int:
         """Return number of instances in QuerySet"""

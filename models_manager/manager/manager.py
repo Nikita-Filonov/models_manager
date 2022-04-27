@@ -8,7 +8,7 @@ from models_manager.manager.field.field import Field
 from models_manager.manager.query.builder import get_query
 from models_manager.manager.query_set import QuerySet
 from models_manager.providers.provider import Provider
-from models_manager.utils import normalize_model, serializer, dump_value, dump_fields, binding
+from models_manager.utils import normalize_model, serializer, dump_value, dump_fields, binding, lazy_setattr
 
 connection = Connect()
 
@@ -44,7 +44,7 @@ class ModelManager:
             if value is not None:
                 field.value = value
 
-    def __resolve_attrs(self, **kwargs):
+    def __resolve_attrs(self, is_lazy=False, **kwargs):
         """
         Method that helps to keep consistency of attr
         between objects and initialization.
@@ -74,18 +74,21 @@ class ModelManager:
                 try:
                     new_value = kwargs[original_field]
                     kwargs[original_field] = deepcopy(value)
-                    kwargs[original_field].value = new_value
-                    setattr(self, original_field, kwargs[original_field])
+                    kwargs[original_field].value = new_value.value if isinstance(new_value, Field) else new_value
+
+                    lazy_setattr(self, original_field, kwargs[original_field], is_lazy)
                 except KeyError:
                     logging.error(f'Unable to resolve field "{field}". Skipped')
 
                 continue
 
             if isinstance(value, Field) and not field.startswith('_meta'):
-                setattr(self, f'_meta__{field}', deepcopy(value))
+                lazy_setattr(self, f'_meta__{field}', deepcopy(value), is_lazy)
                 continue
 
-            setattr(self, field, value)
+            lazy_setattr(self, field, value, is_lazy)
+
+        return kwargs
 
     def __fields_as_original(self, json_key: bool = False) -> Dict[str, Field]:
         """
@@ -143,12 +146,13 @@ class ModelManager:
 
         if isinstance(result, list):
             instances = [
-                type(self._model, self._mro, {**self.__dict__, **(row or {})})()
+                type(self._model, self._mro, self.__resolve_attrs(**{**self.__dict__, **(row or {})}, is_lazy=True))()
                 for row in result
             ]
-            return QuerySet(self._model, self._identity, self._lazy_query, self._mro, instances)
+            return QuerySet(self._model, self._identity, self._lazy_query, self._mro, instances, self)
 
-        return type(self._model, self._mro, {**self.__dict__, **(result or {})})()
+        payload = {**self.__dict__, **(result or {})}
+        return type(self._model, self._mro, self.__resolve_attrs(**payload, is_lazy=True))()
 
     def fields(self, json_key: bool = True) -> Dict[str, Field]:
         return self.__fields_as_original(json_key)
