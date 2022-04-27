@@ -53,7 +53,7 @@ class Field:
 
         self._typing_template = resolve_typing(self.category)
 
-    def _with_ensure_value_valid(self, value: Any, json_key=False):
+    def _with_ensure_value_valid(self, value: Any, json_key=True):
         from models_manager.json.provider import JsonProvider  # no qa
 
         provider = JsonProvider(schema_template=self._typing_template, original_value=value, json_key=json_key)
@@ -66,7 +66,7 @@ class Field:
 
         return dict_value
 
-    def dict(self, json_key=False):
+    def dict(self, json_key=True):
         """
         :param json_key:
         :return:

@@ -166,3 +166,30 @@ class TestField:
     def test_field_get_schema(self, arguments, schema):
         field = Field(json='some', **arguments)
         assert field.get_schema == schema
+
+    @pytest.mark.parametrize(
+        'default, category, expected',
+        [
+            (1, int, 1),
+            ([1, 2, 3], List[int], [1, 2, 3]),
+            ([{'some': 1}], List[Dict[str, int]], [{'some': 1}]),
+            ({'some': 1}, Dict[str, int], {'some': 1}),
+            (DefaultModel, DefaultModel, {
+                DefaultModel.id.json: DefaultModel.id.default,
+                DefaultModel.first_name.json: DefaultModel.first_name.default,
+                DefaultModel.email.json: DefaultModel.email.default
+            }),
+            ([DefaultModel], List[DefaultModel], [{
+                DefaultModel.id.json: DefaultModel.id.default,
+                DefaultModel.first_name.json: DefaultModel.first_name.default,
+                DefaultModel.email.json: DefaultModel.email.default
+            }])
+        ]
+    )
+    def test_field_get_dict(self, default, category, expected):
+        field = Field(default=default, category=category)
+
+        assert field.dict() == expected
+
+    def test_field_get_dict_with_json_key(self):
+        pass

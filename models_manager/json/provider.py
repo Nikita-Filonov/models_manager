@@ -9,7 +9,7 @@ from models_manager.schema.validator import SchemaValidator
 
 
 class JsonProvider:
-    def __init__(self, schema_template: dict, original_value, json_key=False, inner=False):
+    def __init__(self, schema_template: dict, original_value, json_key=True, inner=False):
         self._json_key = json_key
         self._schema_template = schema_template
         self._original_value = original_value if inner else deepcopy(original_value)
