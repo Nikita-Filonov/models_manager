@@ -190,6 +190,3 @@ class TestField:
         field = Field(default=default, category=category)
 
         assert field.dict() == expected
-
-    def test_field_get_dict_with_json_key(self):
-        pass

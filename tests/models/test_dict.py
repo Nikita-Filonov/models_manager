@@ -74,3 +74,18 @@ class TestDict:
         json, next_json = self.random_model.to_dict(), self.random_model.to_dict()
 
         assert json != next_json
+
+    @pytest.mark.parametrize('json_key, expected', [
+        (True, {
+            DefaultModel.id.json: DefaultModel.id.default,
+            DefaultModel.first_name.json: DefaultModel.first_name.default,
+            DefaultModel.email.json: DefaultModel.email.default
+        }),
+        (False, {
+            DefaultModel.id.json: DefaultModel.id.default,
+            'first_name': DefaultModel.first_name.default,
+            DefaultModel.email.json: DefaultModel.email.default
+        })
+    ])
+    def test_field_get_dict_with_json_key(self, json_key, expected):
+        assert self.model.to_dict(json_key=json_key) == expected
