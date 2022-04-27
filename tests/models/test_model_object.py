@@ -45,6 +45,13 @@ class TestModelObject:
         with pytest.raises(ValidationError):
             DefaultModel(**attributes)
 
+    @pytest.mark.parametrize('value', [True, [], {}, DefaultModel, 'some'])
+    def test_model_object_field_value_setter_validation(self, value):
+        model_object = DefaultModel()
+
+        with pytest.raises(ValidationError):
+            model_object.id.value = value
+
     def test_model_object_for_nested_model(self):
         inner = InnerModel(id=5)
         outer = OuterModel(inner=inner)
