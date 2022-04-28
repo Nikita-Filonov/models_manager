@@ -187,3 +187,10 @@ def deprecated(message):
         return new_func
 
     return inner
+
+
+def lazy_setattr(instance, name, value, is_lazy=False):
+    if is_lazy:
+        return
+
+    setattr(instance, name, value)

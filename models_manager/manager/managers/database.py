@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from typing import Dict, List, Union
 
 from models_manager.connect import Connect
@@ -7,7 +8,7 @@ from models_manager.manager.field.field import Field
 from models_manager.manager.managers.base import BaseManager
 from models_manager.manager.query.builder import get_query
 from models_manager.manager.query_set import QuerySet
-from models_manager.utils import normalize_model, serializer, dump_value, dump_fields, binding
+from models_manager.utils import normalize_model, serializer, dump_value, dump_fields, binding, lazy_setattr
 
 connection = Connect()
 
@@ -17,6 +18,82 @@ class DatabaseManager(BaseManager):
     @property
     def _lazy_query(self):
         return getattr(connection, self._database, None)
+
+    def apply_values(self, **kwargs):
+        for _, field in self.__fields_as_original(json_key=False).items():
+            value = kwargs.get(field.json, None)
+
+            if value is not None:
+                field.value = value
+
+    def __resolve_attrs(self, is_lazy=False, **kwargs):
+        """
+        Method that helps to keep consistency of attr
+        between objects and initialization.
+
+        Original model might look like:
+        class MyModel(Model):
+           id: int = Field(default=1)
+           last_name: str = Field(default='some_last_name')
+           username: str = Field(default='some', only_json=True)
+           password: str = Field()
+
+        So model attrs will look like:
+        {
+            'id': 1,
+            'last_name': 'some_last_name',
+            ...
+            '_meta__id: Field(default='some_last_name')
+            '_meta__last_name': Field(default='some', only_json=True),
+            ...
+        }
+
+        This way each model object will have always the same attrs
+        """
+        for field, value in kwargs.items():
+            if isinstance(value, Field) and field.startswith('_meta'):
+                original_field = field.replace('_meta__', '')
+                try:
+                    new_value = kwargs[original_field]
+                    kwargs[original_field] = deepcopy(value)
+                    kwargs[original_field].value = new_value.value if isinstance(new_value, Field) else new_value
+
+                    lazy_setattr(self, original_field, kwargs[original_field], is_lazy)
+                except KeyError:
+                    logging.error(f'Unable to resolve field "{field}". Skipped')
+
+                continue
+
+            if isinstance(value, Field) and not field.startswith('_meta'):
+                lazy_setattr(self, f'_meta__{field}', deepcopy(value), is_lazy)
+                continue
+
+            lazy_setattr(self, field, value, is_lazy)
+
+        return kwargs
+
+    def __fields_as_original(self, json_key: bool = False) -> Dict[str, Field]:
+        """
+        Returns original model names with their <Field> object.
+        So this method converts all _meta* attrs to original
+        field name.
+
+        Example:
+        class MyModel(Model):
+           id: int = Field(default=1)
+           last_name: str = Field(default='some_last_name')
+           username: str = Field(default='some', only_json=True)
+           password: str = Field()
+
+        last_name -> 'some_last_name'
+        _meta__last_name -> Field(default='some_last_name')
+        __fields_as_original -> {'last_name': Field(default='some_last_name')}
+        """
+        return {
+            ((value.json or field.replace('_meta__', '')) if json_key else field.replace('_meta__', '')): value
+            for field, value in self.__dict__.items()
+            if field.startswith('_meta')
+        }
 
     @property
     def __only_db_attrs(self) -> dict:
@@ -51,12 +128,13 @@ class DatabaseManager(BaseManager):
 
         if isinstance(result, list):
             instances = [
-                type(self._model, self._mro, {**self.__dict__, **(row or {})})()
+                type(self._model, self._mro, self.__resolve_attrs(**{**self.__dict__, **(row or {})}, is_lazy=True))()
                 for row in result
             ]
-            return QuerySet(self._model, self._identity, self._lazy_query, self._mro, instances)
+            return QuerySet(self._model, self._identity, self._lazy_query, self._mro, instances, self)
 
-        return type(self._model, self._mro, {**self.__dict__, **(result or {})})()
+        payload = {**self.__dict__, **(result or {})}
+        return type(self._model, self._mro, self.__resolve_attrs(**payload, is_lazy=True))()
 
     def fields(self, json_key: bool = True) -> Dict[str, Field]:
         return self._fields_as_original(json_key)
@@ -181,7 +259,7 @@ class DatabaseManager(BaseManager):
         """
         model = normalize_model(self._model)
         sql = f'DELETE FROM "{model}" WHERE "{model}"."{self._identity}" = %s;'
-        self._lazy_query(sql, (self.__dict__[self._identity],))
+        self._lazy_query(sql, (self.__dict__[self._identity].value,))
 
     def update(self, as_json=True, **kwargs):
         """
@@ -204,8 +282,7 @@ class DatabaseManager(BaseManager):
 
         sql = f'UPDATE "{model}" SET {values} WHERE "{model}"."{self._identity}" = %s RETURNING*;'
 
-        some = self.__dict__
-        cursor = self._lazy_query(sql, (self.__dict__[self._identity],))
+        cursor = self._lazy_query(sql, (self.__dict__[self._identity].value,))
         result = serializer(cursor)
 
         return self.__as_json(as_json, result)
