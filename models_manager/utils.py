@@ -2,7 +2,7 @@ import functools
 import logging
 import re
 import warnings
-from random import choice, randint
+from random import choice, randint, uniform
 from string import ascii_letters, digits
 from time import sleep
 from typing import Union
@@ -23,6 +23,10 @@ def random_string(start: int = 20, end: int = 50) -> str:
 
 def random_number(start: int = 5, end: int = 50) -> int:
     return randint(start, end)
+
+
+def random_decimal(start: Union[int, float] = 5, end: Union[int, float] = 50) -> float:
+    return uniform(start, end)
 
 
 def random_dict(keys_count=5, types=(str, int, bool), **kwargs) -> dict:

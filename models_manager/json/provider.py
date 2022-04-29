@@ -4,19 +4,19 @@ from typing import Union, Any
 from models_manager import Model
 from models_manager.manager.exeptions import JsonException
 from models_manager.manager.model import Meta
-from models_manager.schema.schema_typing import ARGS, INNER, ORIGIN
+from models_manager.schema.schema_template import SchemaTemplate
 from models_manager.schema.validator import SchemaValidator
 
 
 class JsonProvider:
-    def __init__(self, schema_template: dict, original_value, json_key=True, inner=False):
+    def __init__(self, schema_template: SchemaTemplate, original_value, json_key=True, inner=False):
         self._json_key = json_key
         self._schema_template = schema_template
         self._original_value = original_value if inner else deepcopy(original_value)
 
-        self._args = self._schema_template.get(ARGS)
-        self._inner = self._schema_template.get(INNER)
-        self._origin = self._schema_template.get(ORIGIN)
+        self._args = self._schema_template.args
+        self._inner = self._schema_template.inner
+        self._origin = self._schema_template.origin
 
     def _analyze_model(self, value: Union[Any, Model], key=None):
         if isinstance(value, Model):

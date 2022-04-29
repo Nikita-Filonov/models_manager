@@ -8,15 +8,23 @@ from models_manager.schema.schema_typing import resolve_typing
 @pytest.mark.schema_typing
 class TestSchemaTyping:
     @pytest.mark.parametrize('annotation, template', [
-        (dict, {'origin': dict, 'args': []}),
-        (Dict[str, int], {'origin': dict, 'args': [str, int]}),
-        (List[Dict[str, int]], {'origin': list, 'args': [], 'inner': {'origin': dict, 'args': [str, int]}}),
+        (dict, {'origin': dict, 'args': [], 'inner': None}),
+        (Dict[str, int], {'origin': dict, 'args': [str, int], 'inner': None}),
+        (List[Dict[str, int]], {
+            'origin': list,
+            'args': [],
+            'inner': {'origin': dict, 'args': [str, int], 'inner': None}
+        }),
         (List[Dict[str, Union[int, str]]], {
             'origin': list,
             'args': [],
-            'inner': {'origin': dict, 'args': [str], 'inner': {'origin': 'union', 'args': [str, int]}}
+            'inner': {
+                'origin': dict,
+                'args': [str],
+                'inner': {'origin': 'union', 'args': [str, int], 'inner': None}
+            }
         }),
-        (None, {'args': [], 'origin': None})
+        (None, {'args': [], 'origin': None, 'inner': None})
     ])
     def test_resolve_typing(self, annotation, template):
-        assert resolve_typing(annotation) == template
+        assert resolve_typing(annotation).serialize() == template

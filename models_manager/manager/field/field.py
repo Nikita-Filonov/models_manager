@@ -172,7 +172,18 @@ class Field:
 
     @property
     def negative(self) -> NegativeValuesProvider1:
-        return NegativeValuesProvider1()
+        return NegativeValuesProvider1(
+            category=self.category,
+            schema_template=self._typing_template,
+            max_length=self.max_length,
+            min_length=self.min_length,
+            max_items=self.max_items,
+            min_items=self.min_items,
+            gt=self.gt,
+            ge=self.ge,
+            lt=self.lt,
+            le=self.le,
+        )
 
     @property
     def get_schema(self) -> Union[Dict[str, int], Dict[str, Union[list, tuple]], Dict[str, Union[List[str], str]]]:

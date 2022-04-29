@@ -1,11 +1,9 @@
-from typing import _GenericAlias, Union, Dict, Optional  # no qa
+from typing import _GenericAlias, Union, Optional  # no qa
 
-ORIGIN = 'origin'
-ARGS = 'args'
-INNER = 'inner'
+from models_manager.schema.schema_template import SchemaTemplate
 
 
-def resolve_typing(annotation: Optional[_GenericAlias]) -> Dict[str, Union[None, list, str]]:
+def resolve_typing(annotation: Optional[_GenericAlias]) -> SchemaTemplate:
     """
     Used to turn a type annotation into a convenient object.
     This object will describe annotation and nesting, types, original types
@@ -38,7 +36,7 @@ def resolve_typing(annotation: Optional[_GenericAlias]) -> Dict[str, Union[None,
            }
        }
     """
-    template = {ORIGIN: None, ARGS: []}
+    template = SchemaTemplate()
     if annotation is None:
         return template
 
@@ -47,15 +45,16 @@ def resolve_typing(annotation: Optional[_GenericAlias]) -> Dict[str, Union[None,
     origin = attributes.get('__origin__')
 
     if origin is None:
-        return {**template, ORIGIN: annotation}
+        template.origin = annotation
+        return template
 
-    template[ORIGIN] = 'union' if origin == Union else origin
+    template.origin = 'union' if origin == Union else origin
 
     for attr in attributes['__args__']:
         if isinstance(attr, _GenericAlias):
-            template[INNER] = resolve_typing(attr)
+            template.inner = resolve_typing(attr)
             continue
 
-        template[ARGS] = [*template[ARGS], attr]
+        template.args = [*template.args, attr]
 
     return template

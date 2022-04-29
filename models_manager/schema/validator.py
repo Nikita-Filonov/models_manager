@@ -2,7 +2,7 @@ from typing import Iterable
 
 from models_manager.manager.exeptions import SchemaException
 from models_manager.manager.field.typing import GenericChoices
-from models_manager.schema.schema_typing import ARGS, INNER, ORIGIN
+from models_manager.schema.schema_template import SchemaTemplate
 
 
 def safe_any(iterable: Iterable):
@@ -14,7 +14,7 @@ class SchemaValidator:
 
     def __init__(
             self,
-            schema_template: dict,
+            schema_template: SchemaTemplate,
             choices: GenericChoices = None,
             max_length: int = None,
             min_length: int = None,
@@ -41,9 +41,9 @@ class SchemaValidator:
         self._title = title
         self._description = description
 
-        self._args = self._schema_template.get(ARGS)
-        self._inner = self._schema_template.get(INNER)
-        self._origin = self._schema_template.get(ORIGIN)
+        self._args = self._schema_template.args
+        self._inner = self._schema_template.inner
+        self._origin = self._schema_template.origin
 
     def _ensure_not_union(self) -> bool:
         return (self._origin != self.UNION) and (self._origin is not None)

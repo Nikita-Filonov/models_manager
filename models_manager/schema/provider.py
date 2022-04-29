@@ -3,7 +3,7 @@ from models_manager.manager.exeptions import SchemaException
 from models_manager.manager.field.typing import GenericChoices
 from models_manager.manager.model import Meta
 from models_manager.schema.context import SchemaContext
-from models_manager.schema.schema_typing import ORIGIN, ARGS, INNER
+from models_manager.schema.schema_template import SchemaTemplate
 from models_manager.schema.validator import SchemaValidator
 
 
@@ -19,16 +19,21 @@ class SchemaProvider(SchemaValidator):
     - {'origin': list, 'args': [], 'inner': {'origin': dict, 'args': [str, int]}}
 
     Example:
-        >>> SchemaProvider(schema_template={'origin': dict, 'args': []}).get_schema()
+        >>> from models_manager.schema.schema_typing import resolve_typing
+        >>> template = resolve_typing(dict)
+        >>> SchemaProvider(schema_template=template).get_schema()
         {'type': 'object'}
 
-        >>> SchemaProvider(schema_template={'origin': dict, 'args': [str, int]}).get_schema()
-        {'type': 'object', 'additionalProperties': {'type': 'number'}}
+        >>> from models_manager.schema.schema_typing import resolve_typing
+        >>> from typing import Dict
+        >>> template = resolve_typing(Dict[str, int])
+        >>> SchemaProvider(schema_template=template).get_schema()
+        {'additionalProperties': {'type': 'number'}, 'type': 'object'}
     """
 
     def __init__(
             self,
-            schema_template: dict,
+            schema_template: SchemaTemplate,
             choices: GenericChoices = None,
             max_length: int = None,
             min_length: int = None,
@@ -59,9 +64,9 @@ class SchemaProvider(SchemaValidator):
         self._template = {}
         self._context = SchemaContext()
 
-        self._args = self._schema_template.get(ARGS)
-        self._inner = self._schema_template.get(INNER)
-        self._origin = self._schema_template.get(ORIGIN)
+        self._args = self._schema_template.args
+        self._inner = self._schema_template.inner
+        self._origin = self._schema_template.origin
 
     def __validate_default_values(self):
         self._validate_for_common()
@@ -89,7 +94,9 @@ class SchemaProvider(SchemaValidator):
             return type_name
 
         if isinstance(original_type, Meta):
-            return cls({ORIGIN: original_type}).get_schema()
+            template = SchemaTemplate()
+            template.origin = original_type
+            return cls(template).get_schema()
 
         return {SchemaContext.TYPE: SchemaContext.NULL}
 
