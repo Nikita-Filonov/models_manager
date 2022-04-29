@@ -53,7 +53,7 @@ class Field:
 
         self._typing_template = resolve_typing(self.category)
 
-    def _with_ensure_value_valid(self, value: Any, json_key=True):
+    def _with_ensure_value_valid(self, value: Any, json_key=True) -> Any:
         from models_manager.json.provider import JsonProvider  # no qa
 
         provider = JsonProvider(schema_template=self._typing_template, original_value=value, json_key=json_key)

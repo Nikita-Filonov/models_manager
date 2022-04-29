@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import Dict
 
 from models_manager import Field
+from models_manager.utils import lazy_setattr
 
 
 class BaseManager:
@@ -10,11 +11,11 @@ class BaseManager:
         self._model = model
         self._mro = mro
         self._identity = kwargs.get('identity')
-        self.__resolve_attrs(**kwargs)
+        self._resolve_attrs(**kwargs)
 
         self._database = kwargs.get('database')
 
-    def __resolve_attrs(self, **kwargs):
+    def _resolve_attrs(self, is_lazy=False, **kwargs):
         """
         Method that helps to keep consistency of attr
         between objects and initialization.
@@ -42,15 +43,23 @@ class BaseManager:
             if isinstance(value, Field) and field.startswith('_meta'):
                 original_field = field.replace('_meta__', '')
                 try:
-                    kwargs[field].value = kwargs[original_field]
+                    new_value = kwargs[original_field]
+                    kwargs[original_field] = deepcopy(value)
+                    kwargs[original_field].value = new_value.value if isinstance(new_value, Field) else new_value
+
+                    lazy_setattr(self, original_field, kwargs[original_field], is_lazy)
                 except KeyError:
                     logging.error(f'Unable to resolve field "{field}". Skipped')
 
-            if isinstance(value, Field) and not field.startswith('_meta'):
-                setattr(self, f'_meta__{field}', deepcopy(value))
                 continue
 
-            setattr(self, field, value)
+            if isinstance(value, Field) and not field.startswith('_meta'):
+                lazy_setattr(self, f'_meta__{field}', deepcopy(value), is_lazy)
+                continue
+
+            lazy_setattr(self, field, value, is_lazy)
+
+        return kwargs
 
     def apply_values(self, **kwargs):
         for _, field in self._fields_as_original(json_key=False).items():
