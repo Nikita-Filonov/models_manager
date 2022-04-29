@@ -1,9 +1,27 @@
+from itertools import tee
 from typing import Dict, Union, List
 
 from models_manager.manager.managers.base import BaseManager
 
 
 class SchemaManager(BaseManager):
+
+    def __init__(self, model, mro, **kwargs):
+        super().__init__(model, mro, **kwargs)
+
+        self._exclude_schema = None
+
+    @property
+    def exclude_schema(self):
+        if self._exclude_schema is None:
+            return []
+
+        return [field if isinstance(field, str) else field.json for field in self._exclude_schema]
+
+    @exclude_schema.setter
+    def exclude_schema(self, value):
+        self._exclude_schema = value
+
     @property
     def to_schema(self) -> Dict[str, Union[str, dict, List[str]]]:
         """
@@ -50,16 +68,18 @@ class SchemaManager(BaseManager):
         validate(instance=json, schema=schema)
         """
         original_fields = self._fields_as_original().items()
+        properties, required = tee(filter(lambda args: args[1].json not in self.exclude_schema, original_fields))
+
         return {
             "title": self._model,
             "type": "object",
             "properties": {
-                field.json: field.get_schema for _, field in original_fields
+                field.json: field.get_schema for _, field in properties
                 if field.json is not None
             },
             "required": [
-                value.json for _, value in original_fields
-                if (value.json is not None) and (not value.is_optional) and (not value.is_related)
+                field.json for _, field in required
+                if (field.json is not None) and (not field.is_optional) and (not field.is_related)
             ]
         }
 

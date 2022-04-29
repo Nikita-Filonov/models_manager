@@ -1,15 +1,19 @@
 from copy import deepcopy
 from functools import reduce
-from typing import Union, Dict
+from typing import Union, Dict, List, Any
 
 from models_manager.manager.field.field import Field
 from models_manager.manager.managers.mixin import ManagerMixin
 
 
 class Meta(type):
+    CONFIG = 'Config'
+
     def __new__(mcs, name, bases, attrs):
         safe_name = mcs.resolve_name(name, attrs)
         safe_attrs = mcs.resolve_attrs(bases, attrs)
+
+        safe_attrs = mcs.resolve_config(safe_attrs, attrs.get(mcs.CONFIG))
 
         cls = type.__new__(mcs, name, bases, attrs)
         cls.manager = ManagerMixin(safe_name, bases, **safe_attrs)
@@ -55,15 +59,29 @@ class Meta(type):
         extended_by: Union[Meta, None] = attrs.get('extended_by')
         return extended_by.__name__ if extended_by else name
 
+    @classmethod
+    def resolve_config(mcs, attrs: dict, config=None) -> Dict[str, Any]:
+        if config is None:
+            return attrs
+
+        return {key: value for key, value in attrs.items() if (key not in config.exclude_fields)}
+
 
 class Model(metaclass=Meta):
     database = None
     identity = 'id'
     extended_by = None
 
-    def __init__(self, **kwargs):
+    def __init__(
+            self,
+            exclude_schema: List[Union[Field, str]] = None,
+            exclude_dict: List[Union[Field, str]] = None,
+            **kwargs
+    ):
         self.manager: ManagerMixin = deepcopy(self.manager)
         self.manager.apply_values(**kwargs)
+        self.manager.exclude_schema = exclude_schema
+        self.manager.exclude_dict = exclude_dict
 
         fields: Dict[str, Field] = self.manager.fields(json_key=False)
         self.__apply_to_fields(fields)

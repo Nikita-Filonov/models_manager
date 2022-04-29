@@ -7,6 +7,22 @@ from models_manager.utils import deprecated
 
 class JsonManager(BaseManager):
 
+    def __init__(self, model, mro, **kwargs):
+        super().__init__(model, mro, **kwargs)
+
+        self._exclude_dict = None
+
+    @property
+    def exclude_dict(self):
+        if self._exclude_dict is None:
+            return []
+
+        return [field if isinstance(field, str) else field.json for field in self._exclude_dict]
+
+    @exclude_dict.setter
+    def exclude_dict(self, value):
+        self._exclude_dict = value
+
     @property
     @deprecated('Use "to_dict" instead')
     def to_json(self) -> dict:
@@ -24,9 +40,14 @@ class JsonManager(BaseManager):
             if value.json is not None
         }
 
-    def to_dict(self, json_key=True) -> dict:
+    def to_dict(self, json_key=True, exclude=None) -> dict:
+        safe_exclude = exclude or self.exclude_dict
+
         fields = self._fields_as_original()
-        without_empty_json = filter(lambda args: args[1].json is not None, fields.items())
+        without_empty_json = filter(
+            lambda args: (args[1].json is not None) and (args[1].json not in safe_exclude),
+            fields.items()
+        )
         return {(field.json if json_key else name): field.dict(json_key) for name, field in without_empty_json}
 
     def to_negative_json(self, fields: Union[List[Field], Tuple[Field]] = None, provider=None) -> dict:

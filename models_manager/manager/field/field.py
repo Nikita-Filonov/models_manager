@@ -4,6 +4,7 @@ from uuid import UUID
 from jsonschema import validate
 
 from models_manager.manager.field.typing import GenericTypes, GenericCategories, GenericChoices
+from models_manager.negative.provider import NegativeValuesProvider1
 from models_manager.providers.provider import Provider, NegativeValuesProvider
 from models_manager.schema.schema_typing import resolve_typing
 
@@ -168,6 +169,10 @@ class Field:
     @property
     def is_optional(self) -> bool:
         return self.optional
+
+    @property
+    def negative(self) -> NegativeValuesProvider1:
+        return NegativeValuesProvider1()
 
     @property
     def get_schema(self) -> Union[Dict[str, int], Dict[str, Union[list, tuple]], Dict[str, Union[List[str], str]]]:
