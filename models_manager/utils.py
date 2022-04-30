@@ -5,7 +5,7 @@ import warnings
 from random import choice, randint, uniform
 from string import ascii_letters, digits
 from time import sleep
-from typing import Union
+from typing import Union, Optional
 
 from faker import Faker
 
@@ -47,6 +47,10 @@ def random_list(elements=5, types=(str, int, bool), **kwargs):
     :return: random list
     """
     return fake.pylist(nb_elements=elements, value_types=types, **kwargs)
+
+
+def random_boolean(extra: Optional[Union[list, tuple]] = None):
+    return choice([True, False, *(extra or [])])
 
 
 def retry(times, exceptions, delay=2):

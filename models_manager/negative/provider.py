@@ -1,13 +1,24 @@
+from random import choice
 from typing import Callable
 
 from models_manager.manager.field.typing import GenericCategories
 from models_manager.schema.schema_template import SchemaTemplate
-from models_manager.utils import random_string, random_number, random_decimal, random_dict, random_list
+from models_manager.utils import random_string, random_number, random_decimal, random_dict, random_list, random_boolean
 
 
+# TODO добавить рандомную дату
 class NegativeValuesProvider1:
     MIN_ADD = 1
     MAX_ADD = 20
+    VALUES_PROVIDERS = {
+        int: random_number,
+        float: random_decimal,
+        str: random_string,
+        list: random_list,
+        tuple: random_list,
+        dict: random_dict,
+        bool: random_boolean
+    }
 
     def __init__(
             self,
@@ -33,17 +44,30 @@ class NegativeValuesProvider1:
 
         self._origin = schema_template.origin
         self._args = schema_template.args
+        self._inner = schema_template.inner
 
     @property
     def _value_provider(self) -> Callable:
-        if issubclass(self._origin, str):
-            return random_string
+        if self._origin == 'union':
+            return self._go_for_union()
 
-        if issubclass(self._origin, int):
+        if issubclass(self._origin, str):
             return random_number
 
+        if issubclass(self._origin, int):
+            return random_string
+
         if issubclass(self._origin, float):
-            return random_decimal
+            return random_string
+
+        if issubclass(self._origin, (list, tuple)):
+            return random_dict
+
+        if issubclass(self._origin, dict):
+            return random_list
+
+        if issubclass(self._origin, bool):
+            return random_number
 
     def max_length(self):
         return self._value_provider(self._max_length + self.MIN_ADD, self._max_length + self.MAX_ADD)
@@ -71,23 +95,9 @@ class NegativeValuesProvider1:
         return
 
     def category(self):
-        if self._origin == 'union':
-            raise NotImplementedError('TODO')
+        return self._value_provider()
 
-        if issubclass(self._origin, str):
-            return random_number()
-
-        if issubclass(self._origin, int):
-            return random_string()
-
-        if issubclass(self._origin, float):
-            return random_string()
-
-        if issubclass(self._origin, (list, tuple)):
-            return random_dict()
-
-        if issubclass(self._origin, dict):
-            return random_list()
-
-        if issubclass(self._origin, bool):
-            return random_number()
+    def _go_for_union(self) -> Callable:
+        available_providers = list(filter(lambda arg: arg[0] not in self._args, self.VALUES_PROVIDERS.items()))
+        _, provider = choice(available_providers)
+        return provider
