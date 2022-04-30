@@ -188,7 +188,11 @@ class TestField:
                 DefaultModel.id.json: DefaultModel.id.default,
                 DefaultModel.first_name.json: DefaultModel.first_name.default,
                 DefaultModel.email.json: DefaultModel.email.default
-            }])
+            }]),
+            (datetime(year=2022, month=4, day=30), datetime, '2022-04-30 00:00:00'),
+            (date(year=2022, month=4, day=30), date, '2022-04-30'),
+            (time(hour=1, minute=1, second=1, microsecond=1), time, '01:01:01.000001'),
+            (timedelta(minutes=30), timedelta, '0:30:00')
         ]
     )
     def test_field_get_dict(self, default, category, expected):

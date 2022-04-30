@@ -1,3 +1,4 @@
+from datetime import datetime, date, time, timedelta
 from typing import Union, Dict, List, Any
 from uuid import UUID
 
@@ -62,7 +63,7 @@ class Field:
         provider = JsonProvider(schema_template=self._typing_template, original_value=value, json_key=json_key)
         dict_value = provider.get_value()
 
-        if isinstance(dict_value, UUID):
+        if isinstance(dict_value, (UUID, datetime, date, time, timedelta)):
             dict_value = str(dict_value)
 
         validate(instance=dict_value, schema=self.get_schema)
@@ -71,8 +72,22 @@ class Field:
 
     def dict(self, json_key=True):
         """
-        :param json_key:
-        :return:
+        Same as ``value`` it returns field current value, but instead of
+        ``value`` dict will convert original value into dict, list, string or
+        any json serializable object.
+
+        For example we can not serialize/send datetime/date/time object into
+        API endpoint. We have to send string, So the ```dict`` will manage such objects
+
+        Examples:
+            >>> from typing import Optional
+            >>> field = Field(json='field', category=Optional[str])
+            >>> field.dict()
+
+            >>> from typing import Optional
+            >>> field = Field(json='field', category=Optional[str], default='some')
+            >>> field.dict()
+            'some'
         """
         return self._with_ensure_value_valid(self.value, json_key=json_key)
 
@@ -83,17 +98,17 @@ class Field:
         will return default value
 
         Example:
-        >>> name = Field(json='name', category=str, default='some')
-        >>> name.value
-        'some'
+            >>> name = Field(json='name', category=str, default='some')
+            >>> name.value
+            'some'
 
-        >>> name = Field(json='name', category=str, default='some', value='another')
-        >>> name.value
-        'another'
+            >>> name = Field(json='name', category=str, default='some', value='another')
+            >>> name.value
+            'another'
 
-        >>> name = Field(json='name', category=str, value='another')
-        >>> name.value
-        'another'
+            >>> name = Field(json='name', category=str, value='another')
+            >>> name.value
+            'another'
         """
         safe_value = self.get_default if self._value is None else self._value
         self._with_ensure_value_valid(safe_value)
@@ -122,25 +137,25 @@ class Field:
         'some'
 
         Example:
-        >>> name = Field(category=str, default='some')
-        >>> name.get_default
-        'some'
+            >>> name = Field(category=str, default='some')
+            >>> name.get_default
+            'some'
 
-        >>> some = lambda: 'some'
-        >>> name = Field(category=str, default=some)
-        >>> name.get_default
-        'some'
+            >>> some = lambda: 'some'
+            >>> name = Field(category=str, default=some)
+            >>> name.get_default
+            'some'
 
-        In fact this will also work
-        >>> some = lambda: []
-        >>> name = Field(category=str, default=some)
-        >>> name.get_default
-        '[]'
+            In fact this will also work
+            >>> some = lambda: []
+            >>> name = Field(category=str, default=some)
+            >>> name.get_default
+            []
 
-        >>> some = lambda: []
-        >>> name = Field(category=list, default=some)
-        >>> name.get_default
-        []
+            >>> some = lambda: []
+            >>> name = Field(category=list, default=some)
+            >>> name.get_default
+            []
 
         """
         if self.default is None:
@@ -192,26 +207,27 @@ class Field:
         """
         Used to get schema properties template for certain field.
 
-        Example:
-        >>> name = Field(json='name', category=str, max_length=255, null=True)
-        >>> name.get_schema
-        {'type': ['string', 'null'], 'minLength': 0, 'maxLength': 255}
+        Examples:
+            >>> from typing import Optional
+            >>> name = Field(json='name', category=Optional[str], max_length=255, null=True)
+            >>> name.get_schema
+            {'maxLength': 255, 'anyOf': [{'type': 'string'}, {'type': 'null'}]}
 
-        >>> username = Field(json='username', category=str, max_length=255, null=False)
-        >>> username.get_schema
-        {'type': 'string', 'minLength': 0, 'maxLength': 255}
+            >>> username = Field(json='username', category=str, max_length=255, null=False)
+            >>> username.get_schema
+            {'maxLength': 255, 'type': 'string'}
 
-        >>> email = Field(json='email', category=str, null=False)
-        >>> email.get_schema
-        {'type': 'string'}
+            >>> email = Field(json='email', category=str, null=False)
+            >>> email.get_schema
+            {'type': 'string'}
 
-        >>> project_id = Field(json='projectId', category=str, null=False, is_related=True)
-        >>> project_id.get_schema
-        {'type': ['string', 'null']}
+            >>> project_id = Field(json='projectId', category=str, null=False, is_related=True)
+            >>> project_id.get_schema
+            {'type': 'string'}
 
-        >>> object_id = Field(json='projectId', category=str, is_related=True)
-        >>> object_id.get_schema
-        {'type': ['string', 'null']}
+            >>> object_id = Field(json='projectId', category=str, is_related=True)
+            >>> object_id.get_schema
+            {'type': 'string'}
         """
         from models_manager.schema.provider import SchemaProvider  # no qa
 

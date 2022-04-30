@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Type
 
 from models_manager.manager.exeptions import SchemaException
 from models_manager.manager.field.typing import GenericChoices
@@ -50,10 +50,13 @@ class SchemaValidator:
     def _ensure_not_union(self) -> bool:
         return (self._origin != self.UNION) and (self._origin is not None)
 
+    def _ensure_is_optional(self, *category: Type) -> bool:
+        return any(issubclass(arg, (*category,)) for arg in self._args)
+
     def _validate_for_str(self):
         any_length = safe_any((self._max_length, self._min_length))
 
-        if (not self._ensure_not_union()) and any_length:
+        if (not self._ensure_not_union()) and any_length and (not self._ensure_is_optional(str)):
             raise SchemaException(f'Attempt to use "max_length"/"min_length"" on non String field "{self._origin}"')
 
         if self._ensure_not_union():
@@ -63,7 +66,7 @@ class SchemaValidator:
     def _validate_for_int_float(self):
         any_gt_lt = safe_any((self._gt, self._ge, self._lt, self._le))
 
-        if (not self._ensure_not_union()) and any_gt_lt:
+        if (not self._ensure_not_union()) and any_gt_lt and (not self._ensure_is_optional(int, float)):
             raise SchemaException(f'Attempt to use "gt"/"ge"/"lt"/"le" on non Decimal field "{self._origin}"')
 
         if self._ensure_not_union():
@@ -83,7 +86,7 @@ class SchemaValidator:
 
     def _validate_for_list_tuple(self):
         any_items = safe_any((self._min_items, self._max_items))
-        if (not self._ensure_not_union()) and any_items:
+        if (not self._ensure_not_union()) and any_items and (not self._ensure_is_optional(list, tuple)):
             raise SchemaException(f'Attempt to use "min_items"/"max_items" on non Array/Tuple filed "{self._origin}"')
 
         if self._ensure_not_union():
