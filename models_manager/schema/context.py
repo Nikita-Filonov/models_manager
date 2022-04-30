@@ -1,3 +1,6 @@
+from datetime import datetime, date, time, timedelta
+
+
 class SchemaContext:
     TYPE = 'type'
     ANY_OF = 'anyOf'
@@ -13,8 +16,21 @@ class SchemaContext:
     LT = 'exclusiveMaximum'
     LE = 'maximum'
     NULL = 'null'
+    PATTERN = 'pattern'
+    FORMAT = 'format'
     TITLE = 'title'
     DESCRIPTION = 'description'
+    DATETIME_FORMAT = 'date-time'
+    DATE_FORMAT = 'date'
+    TIME_FORMAT = 'time'
+    TIME_DELTA_FORMAT = 'time-delta'
+
+    FORMATS = {
+        datetime: DATETIME_FORMAT,
+        date: DATE_FORMAT,
+        time: TIME_FORMAT,
+        timedelta: TIME_DELTA_FORMAT
+    }
 
     __slots__ = (
         'choices',
@@ -26,6 +42,8 @@ class SchemaContext:
         'ge',
         'lt',
         'le',
+        'pattern',
+        'format',
         'title',
         'description',
         '_template',

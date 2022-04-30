@@ -24,6 +24,7 @@ class SchemaValidator:
             le: float = None,
             max_items: int = None,
             min_items: int = None,
+            pattern: str = None,
             title: str = None,
             description: str = None
     ):
@@ -38,6 +39,7 @@ class SchemaValidator:
         self._ge = ge
         self._lt = lt
         self._le = le
+        self._pattern = pattern
         self._title = title
         self._description = description
 

@@ -23,6 +23,7 @@ class Field:
                  lt: float = None,
                  le: float = None,
                  null: bool = False,
+                 pattern: str = None,
                  only_json: bool = False,
                  is_related: bool = False,
                  related_to=None,
@@ -42,6 +43,7 @@ class Field:
         self.min_length = min_length
         self.max_items = max_items
         self.min_items = min_items
+        self.pattern = pattern
         self.title = title
         self.description = description
         self.default = default
@@ -224,6 +226,7 @@ class Field:
             le=self.le,
             max_items=self.max_items,
             min_items=self.min_items,
+            pattern=self.pattern,
             title=self.title,
             description=self.description
         )

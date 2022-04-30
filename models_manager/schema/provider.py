@@ -43,6 +43,7 @@ class SchemaProvider(SchemaValidator):
             le: float = None,
             max_items: int = None,
             min_items: int = None,
+            pattern: str = None,
             title: str = None,
             description: str = None,
     ):
@@ -57,6 +58,7 @@ class SchemaProvider(SchemaValidator):
             le=le,
             max_items=max_items,
             min_items=min_items,
+            pattern=pattern,
             title=title,
             description=description
         )
@@ -77,6 +79,7 @@ class SchemaProvider(SchemaValidator):
     def __apply_default_values(self):
         self._context.title = self._title
         self._context.description = self._description
+        self._context.pattern = self._pattern
         self._context.choices = self._choices
         self._context.max_length = self._max_length
         self._context.min_length = self._min_length
@@ -86,6 +89,10 @@ class SchemaProvider(SchemaValidator):
         self._context.le = self._le
         self._context.min_items = self._min_items
         self._context.max_items = self._max_items
+
+        origin_format = self._context.FORMATS.get(self._origin)
+        if origin_format is not None:
+            self._context.format = origin_format
 
     @classmethod
     def __get_type(cls, original_type):
