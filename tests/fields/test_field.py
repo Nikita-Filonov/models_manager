@@ -1,3 +1,4 @@
+from datetime import datetime, date, time, timedelta
 from typing import Optional, List, Dict, Union, Tuple
 
 import pytest
@@ -102,6 +103,10 @@ class TestField:
         ({'category': Optional[int]}, {'anyOf': [{'type': 'number'}, {'type': 'null'}]}),
         ({'category': Optional[str]}, {'anyOf': [{'type': 'string'}, {'type': 'null'}]}),
         ({'category': Optional[list]}, {'anyOf': [{'type': 'array'}, {'type': 'null'}]}),
+        ({'category': datetime}, {'type': 'string', 'format': 'date-time'}),
+        ({'category': date}, {'type': 'string', 'format': 'date'}),
+        ({'category': time}, {'type': 'string', 'format': 'time'}),
+        ({'category': timedelta}, {'type': 'string', 'format': 'time-delta'}),
         ({'category': List[str]}, {'type': 'array', 'items': {'type': 'string'}}),
         (
                 {'category': Dict[str, Union[int, bool]]},
