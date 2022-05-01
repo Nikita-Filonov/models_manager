@@ -5,9 +5,10 @@ from uuid import UUID
 from jsonschema import validate
 
 from models_manager.manager.field.typing import GenericTypes, GenericCategories, GenericChoices
-from models_manager.negative.provider import NegativeValuesProvider1
-from models_manager.providers.provider import Provider, NegativeValuesProvider
+from models_manager.negative.provider import NegativeValuesProvider
+from models_manager.providers.provider import Provider, NegativeValuesProviderDeprecated
 from models_manager.schema.schema_typing import resolve_typing
+from models_manager.utils import deprecated
 
 
 class Field:
@@ -188,9 +189,10 @@ class Field:
         return self.optional
 
     @property
-    def negative(self) -> NegativeValuesProvider1:
-        return NegativeValuesProvider1(
+    def negative(self) -> NegativeValuesProvider:
+        return NegativeValuesProvider(
             category=self.category,
+            choices=self.choices,
             schema_template=self._typing_template,
             max_length=self.max_length,
             min_length=self.min_length,
@@ -248,6 +250,7 @@ class Field:
         )
         return schema_provider.get_schema()
 
+    @deprecated('Use "negative" instead')
     def get_negative_values(self, provider: Provider = None) -> GenericTypes:
         """
         :param provider: Provider class which will be applied for getting negative value
@@ -259,7 +262,7 @@ class Field:
             >>> name = Field(json='name', category=str, max_length=255, null=False)
             >>> name.get_negative_values()
         """
-        safe_provider = provider or NegativeValuesProvider
+        safe_provider = provider or NegativeValuesProviderDeprecated
         return safe_provider(
             null=self.null,
             max_length=self.max_length,

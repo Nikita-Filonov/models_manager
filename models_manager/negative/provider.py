@@ -1,13 +1,14 @@
+from datetime import datetime, date, time
 from random import choice
-from typing import Callable
+from typing import Callable, List, Type
 
-from models_manager.manager.field.typing import GenericCategories
+from models_manager.manager.field.typing import GenericCategories, GenericChoices
 from models_manager.schema.schema_template import SchemaTemplate
-from models_manager.utils import random_string, random_number, random_decimal, random_dict, random_list, random_boolean
+from models_manager.utils import random_string, random_number, random_decimal, random_dict, random_list, random_boolean, \
+    random_datetime, random_date, random_time
 
 
-# TODO добавить рандомную дату
-class NegativeValuesProvider1:
+class NegativeValuesProvider:
     MIN_ADD = 1
     MAX_ADD = 20
     VALUES_PROVIDERS = {
@@ -17,7 +18,10 @@ class NegativeValuesProvider1:
         list: random_list,
         tuple: random_list,
         dict: random_dict,
-        bool: random_boolean
+        bool: random_boolean,
+        datetime: random_datetime,
+        date: random_date,
+        time: random_time
     }
 
     def __init__(
@@ -32,10 +36,14 @@ class NegativeValuesProvider1:
             ge: float = None,
             lt: float = None,
             le: float = None,
+            choices: GenericChoices = None,
     ):
         self._category = category
+        self._choices = choices
         self._max_length = max_length
         self._min_length = min_length
+        self._max_items = max_items
+        self._min_items = min_items
 
         self._gt = gt
         self._ge = ge
@@ -49,31 +57,28 @@ class NegativeValuesProvider1:
     @property
     def _value_provider(self) -> Callable:
         if self._origin == 'union':
-            return self._go_for_union()
+            return self._choose_provider(args=self._args, is_positive=True)
 
-        if issubclass(self._origin, str):
-            return random_number
+        return self.VALUES_PROVIDERS[self._origin]
 
-        if issubclass(self._origin, int):
-            return random_string
+    @property
+    def _negative_value_provider(self):
+        if self._origin == 'union':
+            return self._choose_provider(args=self._args, is_positive=False)
 
-        if issubclass(self._origin, float):
-            return random_string
-
-        if issubclass(self._origin, (list, tuple)):
-            return random_dict
-
-        if issubclass(self._origin, dict):
-            return random_list
-
-        if issubclass(self._origin, bool):
-            return random_number
+        return self._choose_provider(args=[self._origin], is_positive=False)
 
     def max_length(self):
         return self._value_provider(self._max_length + self.MIN_ADD, self._max_length + self.MAX_ADD)
 
     def min_length(self):
         return self._value_provider(self._min_length - self.MAX_ADD, self._min_length - self.MIN_ADD)
+
+    def max_items(self):
+        return self._value_provider(elements=self._max_items + self.MAX_ADD)
+
+    def min_items(self):
+        return self._value_provider(elements=self._min_items - (self.MIN_ADD * 2))
 
     @classmethod
     def null(cls):
@@ -92,12 +97,24 @@ class NegativeValuesProvider1:
         return random_decimal(self._le + self.MIN_ADD, self._le + self.MAX_ADD)
 
     def choices(self):
-        return
+        guess_choice = self._value_provider()
+
+        if guess_choice in self._choices:
+            return self.choices()
+
+        return guess_choice
 
     def category(self):
-        return self._value_provider()
+        return self._negative_value_provider()
 
-    def _go_for_union(self) -> Callable:
-        available_providers = list(filter(lambda arg: arg[0] not in self._args, self.VALUES_PROVIDERS.items()))
+    def _choose_provider(self, args: List[Type], is_positive=False) -> Callable:
+        if is_positive:
+            available_providers = list(filter(lambda arg: arg[0] in args, self.VALUES_PROVIDERS.items()))
+        else:
+            available_providers = list(filter(lambda arg: arg[0] not in args, self.VALUES_PROVIDERS.items()))
+
         _, provider = choice(available_providers)
         return provider
+
+    def random(self, **kwargs):
+        return self._value_provider(**kwargs)

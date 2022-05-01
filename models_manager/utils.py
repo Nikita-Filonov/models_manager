@@ -2,6 +2,7 @@ import functools
 import logging
 import re
 import warnings
+from datetime import datetime, date, timedelta, time
 from random import choice, randint, uniform
 from string import ascii_letters, digits
 from time import sleep
@@ -51,6 +52,18 @@ def random_list(elements=5, types=(str, int, bool), **kwargs):
 
 def random_boolean(extra: Optional[Union[list, tuple]] = None):
     return choice([True, False, *(extra or [])])
+
+
+def random_datetime(end_datetime: Union[date, datetime, timedelta, str, int, None] = None) -> datetime:
+    return fake.date_time(end_datetime=end_datetime)
+
+
+def random_date(end_datetime: datetime = None) -> date:
+    return fake.date_object(end_datetime=end_datetime)
+
+
+def random_time(end_datetime: Union[date, datetime, timedelta, str, int, None] = None) -> time:
+    return fake.time_object(end_datetime=end_datetime)
 
 
 def retry(times, exceptions, delay=2):
