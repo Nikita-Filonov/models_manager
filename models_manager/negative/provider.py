@@ -4,8 +4,8 @@ from typing import Callable, List, Type
 
 from models_manager.manager.field.typing import GenericCategories, GenericChoices
 from models_manager.schema.schema_template import SchemaTemplate
-from models_manager.utils import random_string, random_number, random_decimal, random_dict, random_list, random_boolean, \
-    random_datetime, random_date, random_time
+from models_manager.utils import random_string, random_number, random_decimal, random_dict, random_list, \
+    random_boolean, random_datetime, random_date, random_time
 
 
 class NegativeValuesProvider:

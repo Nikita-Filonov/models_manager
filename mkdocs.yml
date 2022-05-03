@@ -4,6 +4,8 @@ nav:
       - Basic model: models/models.md
       - Inheritance: models/inheritance.md
       - Json: models/json.md
+      - Dict: models/dict.md
+      - Object model: models/object.md
       - Annotation: models/annotation.md
   - Schema:
       - Basic: schema/basic.md
