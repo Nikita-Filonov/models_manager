@@ -1,6 +1,6 @@
 import pytest
 
-from tests.model import DefaultModel
+from tests.model import DefaultModel, OptionalFieldModel
 
 
 @pytest.mark.model_object
@@ -17,6 +17,18 @@ class TestModelSchema:
                     },
                     'required': ['id', 'firstName', 'email'],
                     'title': 'DefaultModel',
+                    'type': 'object'
+                }
+        ),
+        (
+                {'model': OptionalFieldModel},
+                {
+                    'properties': {
+                        'email': {'type': 'string'},
+                        'username': {'type': 'string'},
+                    },
+                    'required': ['email'],
+                    'title': 'OptionalFieldModel',
                     'type': 'object'
                 }
         )

@@ -28,7 +28,6 @@ class Field:
                  pattern: str = None,
                  only_json: bool = False,
                  is_related: bool = False,
-                 related_to=None,
                  optional: bool = False,
                  value: GenericTypes = None,
                  choices: GenericChoices = None,
@@ -53,7 +52,6 @@ class Field:
         self.category = category
         self.is_related = is_related
         self.choices = choices
-        self.related_to = related_to
         self.optional = optional
 
         self._typing_template = resolve_typing(self.category)

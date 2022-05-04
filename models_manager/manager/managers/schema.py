@@ -79,7 +79,7 @@ class SchemaManager(BaseManager):
             },
             "required": [
                 field.json for _, field in required
-                if (field.json is not None) and (not field.is_optional) and (not field.is_related)
+                if (field.json is not None) and (not field.is_optional)
             ]
         }
 

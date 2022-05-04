@@ -199,3 +199,9 @@ class TestField:
         field = Field(default=default, category=category)
 
         assert field.dict() == expected
+
+    @pytest.mark.parametrize('optional', [True, False])
+    def test_field_optionality(self, optional):
+        field = Field(optional=optional)
+
+        assert field.is_optional == optional

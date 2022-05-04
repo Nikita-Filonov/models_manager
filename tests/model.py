@@ -53,3 +53,8 @@ class NestedOuterModel(Model):
 class OptionalOuterModel(Model):
     id = Field(default=1, json='id', category=int)
     inner_or_null = Field(json='inner_or_null', category=Optional[InnerModel])
+
+
+class OptionalFieldModel(Model):
+    email = Field(json='email', category=str)
+    username = Field(json='username', optional=True, category=str)
