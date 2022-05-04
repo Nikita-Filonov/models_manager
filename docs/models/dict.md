@@ -84,3 +84,32 @@ User.manager.to_dict()
 ```
 
 Now we get random json values every time we call the `to_dict()` method
+
+
+Json key
+---
+
+The `json_key` argument is used to control the keys that will be used when serializing the object into a dictionary
+
+Consider an example where the field names differ from their names in json view
+
+```python
+from typing import Optional
+
+from models_manager import Model, Field
+
+
+class User(Model):
+    id = Field(json='Id', category=Optional[str])
+    username = Field(json='Username', category=Optional[str])
+
+
+User.manager.to_dict(json_key=False)
+{'id': None, 'username': None}
+
+User.manager.to_dict(json_key=True)
+{'Id': None, 'Username': None}
+```
+
+From the example above, we see that if `json_key=True`, then we get a dictionary with json keys, otherwise we get the
+original field names
