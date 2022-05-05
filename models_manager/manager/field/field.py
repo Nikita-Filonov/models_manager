@@ -56,7 +56,7 @@ class Field:
 
         self._typing_template = resolve_typing(self.category)
 
-    def _with_ensure_value_valid(self, value: Any, json_key=True) -> Any:
+    def _with_ensure_value_valid(self, value: Any, json_key=True, ignore_validation=False) -> Any:
         from models_manager.json.provider import JsonProvider  # no qa
 
         provider = JsonProvider(schema_template=self._typing_template, original_value=value, json_key=json_key)
@@ -65,11 +65,12 @@ class Field:
         if isinstance(dict_value, (UUID, datetime, date, time, timedelta)):
             dict_value = str(dict_value)
 
-        validate(instance=dict_value, schema=self.get_schema)
+        if not ignore_validation:
+            validate(instance=dict_value, schema=self.get_schema)
 
         return dict_value
 
-    def dict(self, json_key=True):
+    def dict(self, json_key=True, ignore_validation=False):
         """
         Same as ``value`` it returns field current value, but instead of
         ``value`` dict will convert original value into dict, list, string or
@@ -88,7 +89,7 @@ class Field:
             >>> field.dict()
             'some'
         """
-        return self._with_ensure_value_valid(self.value, json_key=json_key)
+        return self._with_ensure_value_valid(self.value, json_key=json_key, ignore_validation=ignore_validation)
 
     @property
     def value(self) -> Any:
@@ -109,10 +110,7 @@ class Field:
             >>> name.value
             'another'
         """
-        safe_value = self.get_default if self._value is None else self._value
-        self._with_ensure_value_valid(safe_value)
-
-        return safe_value
+        return self.get_default if self._value is None else self._value
 
     @value.setter
     def value(self, value):
@@ -160,7 +158,8 @@ class Field:
         if self.default is None:
             return
 
-        return self.default() if callable(self.default) else self.default
+        safe_callable_default = self.default() if callable(self.default) else self.default
+        return self._with_ensure_value_valid(safe_callable_default)
 
     def __str__(self):
         return f'<Field: {self.value}>'

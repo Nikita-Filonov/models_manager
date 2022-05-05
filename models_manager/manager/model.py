@@ -76,12 +76,14 @@ class Model(metaclass=Meta):
             self,
             exclude_schema: List[Union[Field, str]] = None,
             exclude_dict: List[Union[Field, str]] = None,
+            ignore_validation=False,
             **kwargs
     ):
         self.manager: ManagerMixin = deepcopy(self.manager)
         self.manager.apply_values(**kwargs)
         self.manager.exclude_schema = exclude_schema
         self.manager.exclude_dict = exclude_dict
+        self.manager.ignore_validation = ignore_validation
 
         fields: Dict[str, Field] = self.manager.fields(json_key=False)
         self.__apply_to_fields(fields)

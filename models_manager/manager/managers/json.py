@@ -11,6 +11,7 @@ class JsonManager(BaseManager):
         super().__init__(model, mro, **kwargs)
 
         self._exclude_dict = None
+        self._ignore_validation = False
 
     @property
     def exclude_dict(self):
@@ -22,6 +23,14 @@ class JsonManager(BaseManager):
     @exclude_dict.setter
     def exclude_dict(self, value):
         self._exclude_dict = value
+
+    @property
+    def ignore_validation(self):
+        return self._ignore_validation
+
+    @ignore_validation.setter
+    def ignore_validation(self, value):
+        self._ignore_validation = value
 
     @property
     @deprecated('Use "to_dict" instead')
@@ -48,7 +57,11 @@ class JsonManager(BaseManager):
             lambda args: (args[1].json is not None) and (args[1].json not in safe_exclude),
             fields.items()
         )
-        return {(field.json if json_key else name): field.dict(json_key) for name, field in without_empty_json}
+
+        return {
+            (field.json if json_key else name): field.dict(json_key, self.ignore_validation)
+            for name, field in without_empty_json
+        }
 
     def to_negative_json(self, fields: Union[List[Field], Tuple[Field]] = None, provider=None) -> dict:
         """
