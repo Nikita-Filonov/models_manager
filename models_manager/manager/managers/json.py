@@ -47,7 +47,7 @@ class JsonManager(BaseManager):
         }
 
     def to_dict(self, json_key=True, exclude=None) -> dict:
-        safe_exclude = exclude or self.exclude_dict
+        safe_exclude = get_json_from_fields(exclude) or self.exclude_dict
 
         fields = self._fields_as_original()
         without_empty_json = filter(
