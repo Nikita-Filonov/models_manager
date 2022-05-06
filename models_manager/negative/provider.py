@@ -3,12 +3,13 @@ from random import choice
 from typing import Callable, List, Type
 
 from models_manager.manager.field.typing import GenericCategories, GenericChoices
+from models_manager.negative.validator import NegativeValuesValidator
 from models_manager.schema.schema_template import SchemaTemplate
 from models_manager.utils import random_string, random_number, random_decimal, random_dict, random_list, \
     random_boolean, random_datetime, random_date, random_time
 
 
-class NegativeValuesProvider:
+class NegativeValuesProvider(NegativeValuesValidator):
     MIN_ADD = 1
     MAX_ADD = 20
     VALUES_PROVIDERS = {
@@ -38,17 +39,19 @@ class NegativeValuesProvider:
             le: float = None,
             choices: GenericChoices = None,
     ):
-        self._category = category
-        self._choices = choices
-        self._max_length = max_length
-        self._min_length = min_length
-        self._max_items = max_items
-        self._min_items = min_items
-
-        self._gt = gt
-        self._ge = ge
-        self._lt = lt
-        self._le = le
+        super().__init__(
+            category=category,
+            schema_template=schema_template,
+            max_length=max_length,
+            min_length=min_length,
+            max_items=max_items,
+            min_items=min_items,
+            gt=gt,
+            ge=ge,
+            lt=lt,
+            le=le,
+            choices=choices
+        )
 
         self._origin = schema_template.origin
         self._args = schema_template.args
@@ -69,10 +72,12 @@ class NegativeValuesProvider:
         return self._choose_provider(args=[self._origin], is_positive=False)
 
     def max_length(self):
+        self._ensure_max_length()
         return self._value_provider(self._max_length + self.MIN_ADD, self._max_length + self.MAX_ADD)
 
     def min_length(self):
-        return self._value_provider(self._min_length - self.MAX_ADD, self._min_length - self.MIN_ADD)
+        self._ensure_min_length()
+        return self._value_provider(1, self._min_length - self.MIN_ADD)
 
     def max_items(self):
         return self._value_provider(elements=self._max_items + self.MAX_ADD)

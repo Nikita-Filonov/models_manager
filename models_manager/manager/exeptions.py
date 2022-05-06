@@ -46,3 +46,7 @@ class SchemaException(Exception):
 
 class JsonException(Exception):
     pass
+
+
+class NegativeValuesException(Exception):
+    pass

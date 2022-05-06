@@ -1,4 +1,4 @@
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Iterator
 
 from models_manager import Field
 from models_manager.manager.managers.base import BaseManager
@@ -29,6 +29,14 @@ class JsonManager(BaseManager):
     def ignore_validation(self, value):
         self._ignore_validation = value
 
+    def _field_without_empty_json(self, exclude=None) -> Iterator:
+        safe_exclude = exclude or []
+        fields = self._fields_as_original()
+        return filter(
+            lambda args: (args[1].json is not None) and (args[1].json not in safe_exclude),
+            fields.items()
+        )
+
     @property
     @deprecated('Use "to_dict" instead')
     def to_json(self) -> dict:
@@ -48,18 +56,14 @@ class JsonManager(BaseManager):
 
     def to_dict(self, json_key=True, exclude=None) -> dict:
         safe_exclude = get_json_from_fields(exclude) or self.exclude_dict
-
-        fields = self._fields_as_original()
-        without_empty_json = filter(
-            lambda args: (args[1].json is not None) and (args[1].json not in safe_exclude),
-            fields.items()
-        )
+        without_empty_json = self._field_without_empty_json(safe_exclude)
 
         return {
             (field.json if json_key else name): field.dict(json_key, self.ignore_validation)
             for name, field in without_empty_json
         }
 
+    @deprecated('Use "to_dict_with_negative_max_length", "to_dict_with_negative_min_length" instead')
     def to_negative_json(self, fields: Union[List[Field], Tuple[Field]] = None, provider=None) -> dict:
         """
         Same as .to_json, but will return json with negative values
@@ -83,3 +87,22 @@ class JsonManager(BaseManager):
             for value in fields_as_original
             if value.json is not None
         }
+
+    def __to_dict_with_negative(self, method, fields=None):
+        without_empty_json = self._field_without_empty_json()
+        safe_fields = get_json_from_fields(fields)
+
+        return {
+            field.json: (
+                getattr(field.negative, method)()
+                if (field.json in safe_fields)
+                else field.dict(ignore_validation=True)
+            )
+            for name, field in without_empty_json
+        }
+
+    def to_dict_with_negative_max_length(self, fields=None):
+        return self.__to_dict_with_negative(method='max_length', fields=fields)
+
+    def to_dict_with_negative_min_length(self, fields=None):
+        return self.__to_dict_with_negative(method='min_length', fields=fields)
