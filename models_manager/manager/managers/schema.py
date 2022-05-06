@@ -2,6 +2,7 @@ from itertools import tee
 from typing import Dict, Union, List
 
 from models_manager.manager.managers.base import BaseManager
+from models_manager.utils import get_json_from_fields
 
 
 class SchemaManager(BaseManager):
@@ -13,10 +14,7 @@ class SchemaManager(BaseManager):
 
     @property
     def exclude_schema(self):
-        if self._exclude_schema is None:
-            return []
-
-        return [field if isinstance(field, str) else field.json for field in self._exclude_schema]
+        return get_json_from_fields(self._exclude_schema)
 
     @exclude_schema.setter
     def exclude_schema(self, value):

@@ -2,7 +2,7 @@ from typing import Union, List, Tuple
 
 from models_manager import Field
 from models_manager.manager.managers.base import BaseManager
-from models_manager.utils import deprecated
+from models_manager.utils import deprecated, get_json_from_fields
 
 
 class JsonManager(BaseManager):
@@ -15,10 +15,7 @@ class JsonManager(BaseManager):
 
     @property
     def exclude_dict(self):
-        if self._exclude_dict is None:
-            return []
-
-        return [field if isinstance(field, str) else field.json for field in self._exclude_dict]
+        return get_json_from_fields(self._exclude_dict)
 
     @exclude_dict.setter
     def exclude_dict(self, value):

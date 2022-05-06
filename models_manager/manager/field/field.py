@@ -162,9 +162,13 @@ class Field:
         return self._with_ensure_value_valid(safe_callable_default)
 
     def __str__(self):
+        if self.json:
+            return f'<Field: {self.json}, {self.value}>'
         return f'<Field: {self.value}>'
 
     def __repr__(self):
+        if self.json:
+            return f'<Field: {self.json}, {self.value}>'
         return f'<Field: {self.value}>'
 
     def __add__(self, other):

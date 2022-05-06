@@ -6,7 +6,7 @@ from datetime import datetime, date, timedelta, time
 from random import choice, randint, uniform
 from string import ascii_letters, digits
 from time import sleep
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 from faker import Faker
 
@@ -215,3 +215,10 @@ def lazy_setattr(instance, name, value, is_lazy=False):
         return
 
     setattr(instance, name, value)
+
+
+def get_json_from_fields(fields: list) -> List[str]:
+    if fields is None:
+        return []
+
+    return [field if isinstance(field, str) else field.json for field in fields]
