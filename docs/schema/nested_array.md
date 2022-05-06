@@ -1,3 +1,9 @@
+!!! warning
+
+    The `related_to` attrivute is deprecated. Use typing
+    annotation on category attribute. 
+    Read more [with_models](./with_models.md), [advanced](./advanced.md)
+
 Let's imagine that our user can belong to several tenants at once
 
 ```json

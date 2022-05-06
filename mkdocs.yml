@@ -14,6 +14,8 @@ nav:
       - Nested object: schema/nested_object.md
       - Nested array: schema/nested_array.md
       - Enums: schema/enum.md
+      - Advanced usage: schema/advanced.md
+      - With models: schema/with_models.md
   - Field: field.md
   - Providers: providers.md
   - Examples: examples.md

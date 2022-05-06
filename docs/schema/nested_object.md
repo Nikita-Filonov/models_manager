@@ -1,3 +1,9 @@
+!!! warning
+
+    The `related_to` attrivute is deprecated. Use typing
+    annotation on category attribute. 
+    Read more [with_models](./with_models.md), [advanced](./advanced.md)
+
 But we still have a tenant field which is of type object and this is not informative because object can be any json.
 
 ```json
