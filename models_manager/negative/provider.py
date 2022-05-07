@@ -90,6 +90,7 @@ class NegativeValuesProvider(NegativeValuesValidator):
         return None
 
     def gt(self):
+        self._ensure_gt()
         return random_decimal(self._gt - self.MAX_ADD, self._gt)
 
     def ge(self):
