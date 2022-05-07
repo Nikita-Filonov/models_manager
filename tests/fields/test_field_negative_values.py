@@ -81,3 +81,13 @@ class TestFieldNegativeValues:
     def test_field_negative_null_value(self):
         field = Field()
         assert field.negative.null() is None
+
+    @pytest.mark.parametrize('choices, category', [
+        ([1, 2, 3, 4, 5], int),
+        (['1', '2', '3', '4', '5'], str),
+        ([1.5, 2.5, 3.5, 4.5, 5.5], float),
+    ])
+    def test_field_negative_choices_values(self, choices, category):
+        field = Field(choices=choices, category=category)
+
+        assert field.negative.choices() not in choices
