@@ -77,3 +77,7 @@ class TestFieldNegativeValues:
         field = Field(**attributes)
         with pytest.raises(NegativeValuesException):
             field.negative.ge()
+
+    def test_field_negative_null_value(self):
+        field = Field()
+        assert field.negative.null() is None
