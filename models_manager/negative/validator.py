@@ -67,3 +67,21 @@ class NegativeValuesValidator:
             raise NegativeValuesException(
                 f'Attempt to generate negative gt on non Integer/Decimal field, {self._category}'
             )
+
+    def _ensure_ge(self):
+        if self._ge is None:
+            raise NegativeValuesException('Attempt to generate negative ge, but "ge" is None')
+
+        if not issubclass(self._category, (int, float)):
+            raise NegativeValuesException(
+                f'Attempt to generate negative ge on non Integer/Decimal field, {self._category}'
+            )
+
+    def _ensure_le(self):
+        if self._le is None:
+            raise NegativeValuesException('Attempt to generate negative le, but "le" is None')
+
+        if not issubclass(self._category, (int, float)):
+            raise NegativeValuesException(
+                f'Attempt to generate negative le on non Integer/Decimal field, {self._category}'
+            )

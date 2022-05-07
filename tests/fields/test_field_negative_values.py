@@ -40,6 +40,20 @@ class TestFieldNegativeValues:
         assert isinstance(field.negative.lt(), float)
         assert field.negative.lt() > lt
 
+    @pytest.mark.parametrize('ge', [100, 10, 50])
+    def test_field_negative_ge(self, ge):
+        field = Field(category=int, ge=ge)
+
+        assert isinstance(field.negative.ge(), float)
+        assert field.negative.ge() <= ge
+
+    @pytest.mark.parametrize('le', [100, 10, 50])
+    def test_field_negative_le(self, le):
+        field = Field(category=int, le=le)
+
+        assert isinstance(field.negative.le(), float)
+        assert field.negative.le() >= le
+
     @pytest.mark.parametrize('attributes', [{'category': str, 'lt': 100}, {'category': int}])
     def test_field_negative_lt_with_wrong_category(self, attributes):
         field = Field(**attributes)
@@ -51,3 +65,15 @@ class TestFieldNegativeValues:
         field = Field(**attributes)
         with pytest.raises(NegativeValuesException):
             field.negative.gt()
+
+    @pytest.mark.parametrize('attributes', [{'category': str, 'le': 100}, {'category': int}])
+    def test_field_negative_le_with_wrong_category(self, attributes):
+        field = Field(**attributes)
+        with pytest.raises(NegativeValuesException):
+            field.negative.le()
+
+    @pytest.mark.parametrize('attributes', [{'category': str, 'ge': 100}, {'category': int}])
+    def test_field_negative_ge_with_wrong_category(self, attributes):
+        field = Field(**attributes)
+        with pytest.raises(NegativeValuesException):
+            field.negative.ge()
