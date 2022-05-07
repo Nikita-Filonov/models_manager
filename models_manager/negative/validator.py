@@ -58,3 +58,12 @@ class NegativeValuesValidator:
             raise NegativeValuesException(
                 f'Attempt to generate negative gt on non Integer/Decimal field, {self._category}'
             )
+
+    def _ensure_lt(self):
+        if self._lt is None:
+            raise NegativeValuesException('Attempt to generate negative lt, but "lt" is None')
+
+        if not issubclass(self._category, (int, float)):
+            raise NegativeValuesException(
+                f'Attempt to generate negative gt on non Integer/Decimal field, {self._category}'
+            )

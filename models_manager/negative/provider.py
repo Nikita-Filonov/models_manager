@@ -97,6 +97,7 @@ class NegativeValuesProvider(NegativeValuesValidator):
         return random_decimal(self._ge - self.MAX_ADD, self._ge - self.MIN_ADD)
 
     def lt(self):
+        self._ensure_lt()
         return random_decimal(self._lt, self._lt + self.MAX_ADD)
 
     def le(self):
