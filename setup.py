@@ -7,7 +7,7 @@ requirements = ['Faker', 'psycopg2-binary']
 
 setup(
     name="models_manager",
-    version="0.9.0",
+    version="0.9.1",
     author="Nikita Filonov",
     author_email="filonov.nikitkaa@gmail.com",
     description="Models Manager",

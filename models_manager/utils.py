@@ -1,4 +1,5 @@
 import functools
+import json
 import logging
 import re
 import warnings
@@ -222,3 +223,7 @@ def get_json_from_fields(fields: list) -> List[str]:
         return []
 
     return [field if isinstance(field, str) else field.json for field in fields]
+
+
+def prettify_json(payload: dict):
+    return json.dumps(payload, indent=8, sort_keys=True)
