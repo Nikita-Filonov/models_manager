@@ -106,6 +106,7 @@ class NegativeValuesProvider(NegativeValuesValidator):
         return random_decimal(self._le + self.MIN_ADD, self._le + self.MAX_ADD)
 
     def choices(self):
+        self._ensure_choices()
         guess_choice = self._value_provider()
 
         if guess_choice in self._choices:

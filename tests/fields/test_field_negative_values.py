@@ -91,3 +91,8 @@ class TestFieldNegativeValues:
         field = Field(choices=choices, category=category)
 
         assert field.negative.choices() not in choices
+
+    def test_field_negative_choices_without_choices_attribute(self):
+        field = Field(category=int)
+        with pytest.raises(NegativeValuesException):
+            field.negative.choices()

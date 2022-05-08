@@ -85,3 +85,7 @@ class NegativeValuesValidator:
             raise NegativeValuesException(
                 f'Attempt to generate negative le on non Integer/Decimal field, {self._category}'
             )
+
+    def _ensure_choices(self):
+        if self._choices is None:
+            raise NegativeValuesException('Attempt to generate negative choices, but "choices" is None')
