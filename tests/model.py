@@ -27,8 +27,8 @@ class DefaultModel(Model):
 
 class RandomModal(Model):
     id = Field(default=uuid.uuid4, json='id', category=str)
-    first_name = Field(default=random_string, json='firstName', category=str)
-    email = Field(default=random_string, json='email', category=str)
+    first_name = Field(default=random_string, json='firstName', category=str, max_length=200, min_length=10)
+    email = Field(default=random_string, json='email', category=str, max_length=100, min_length=10)
 
 
 class InnerModel(Model):

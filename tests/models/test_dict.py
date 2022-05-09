@@ -89,3 +89,27 @@ class TestDict:
     ])
     def test_field_get_dict_with_json_key(self, json_key, expected):
         assert self.model.to_dict(json_key=json_key) == expected
+
+    @pytest.mark.parametrize('field', [RandomModal.email, RandomModal.first_name])
+    def test_get_dict_with_negative_max_length(self, field):
+        negative_payload = self.random_model.to_dict_with_negative_max_length(fields=[field])
+
+        assert len(negative_payload[field.json]) > field.max_length
+
+    @pytest.mark.parametrize('field', [RandomModal.email, RandomModal.first_name])
+    def test_get_dict_with_negative_min_length(self, field):
+        negative_payload = self.random_model.to_dict_with_negative_min_length(fields=[field])
+
+        assert len(negative_payload[field.json]) < field.max_length
+
+    @pytest.mark.parametrize('field', [RandomModal.email, RandomModal.id])
+    def test_get_dict_with_null_fields(self, field):
+        negative_payload = self.random_model.to_dict_with_null_fields(fields=[field])
+
+        assert negative_payload[field.json] is None
+
+    @pytest.mark.parametrize('field', [RandomModal.email, RandomModal.id])
+    def test_get_dict_with_empty_string_fields(self, field):
+        negative_payload = self.random_model.to_dict_with_empty_string_fields(fields=[field])
+
+        assert negative_payload[field.json] == ''

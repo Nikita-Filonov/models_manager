@@ -89,6 +89,10 @@ class NegativeValuesProvider(NegativeValuesValidator):
     def null(cls):
         return None
 
+    @classmethod
+    def empty_string(cls):
+        return ''
+
     def gt(self):
         self._ensure_gt()
         return random_decimal(self._gt - self.MAX_ADD, self._gt)

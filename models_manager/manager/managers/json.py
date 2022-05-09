@@ -1,4 +1,4 @@
-from typing import Union, List, Tuple, Iterator
+from typing import Union, List, Tuple, Iterator, Optional
 
 from models_manager import Field
 from models_manager.manager.managers.base import BaseManager
@@ -96,13 +96,19 @@ class JsonManager(BaseManager):
             field.json: (
                 getattr(field.negative, method)()
                 if (field.json in safe_fields)
-                else field.dict(ignore_validation=True)
+                else field.dict()
             )
             for name, field in without_empty_json
         }
 
-    def to_dict_with_negative_max_length(self, fields=None):
+    def to_dict_with_negative_max_length(self, fields: Optional[List[Union[str, Field]]] = None):
         return self.__to_dict_with_negative(method='max_length', fields=fields)
 
-    def to_dict_with_negative_min_length(self, fields=None):
+    def to_dict_with_negative_min_length(self, fields: Optional[List[Union[str, Field]]] = None):
         return self.__to_dict_with_negative(method='min_length', fields=fields)
+
+    def to_dict_with_null_fields(self, fields: Optional[List[Union[str, Field]]] = None):
+        return self.__to_dict_with_negative(method='null', fields=fields)
+
+    def to_dict_with_empty_string_fields(self, fields: Optional[List[Union[str, Field]]] = None):
+        return self.__to_dict_with_negative(method='empty_string', fields=fields)
