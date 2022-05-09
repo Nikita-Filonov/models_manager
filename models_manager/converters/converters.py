@@ -1,6 +1,6 @@
 import json as json_lib
 
-from models_manager.utils import prettify_json
+from models_manager.utils import prettify_json, to_snake_case
 
 
 def get_imports():
@@ -16,7 +16,8 @@ def get_field(json, default):
     if type(safe_default) in (bool,):
         safe_default = 'True' if safe_default else 'False'
 
-    return f"\t{json} = Field(json='{json}', default={safe_default}, category={type(default).__name__})"
+    python_field_name = to_snake_case(json)
+    return f"\t{python_field_name} = Field(json='{json}', default={safe_default}, category={type(default).__name__})"
 
 
 def get_class(name, json):
@@ -33,6 +34,6 @@ def str_generator(name, json):
 
     if identity is not None:
         identity_name, _ = identity
-        return '\n\n\tdef str(self):\n\t\treturn f"<%s: %s>"' % (name, "{self.%s.value}" % identity_name)
+        return '\n\n\tdef __str__(self):\n\t\treturn f"<%s: %s>"' % (name, "{self.%s.value}" % identity_name)
 
-    return '\n\n\tdef str(self):\n\t\treturn f"<%s>"' % name
+    return '\n\n\tdef __str__(self):\n\t\treturn f"<%s>"' % name
