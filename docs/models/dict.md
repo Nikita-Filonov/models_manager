@@ -113,3 +113,50 @@ User.manager.to_dict(json_key=True)
 
 From the example above, we see that if `json_key=True`, then we get a dictionary with json keys, otherwise we get the
 original field names
+
+
+Exclude
+---
+
+To exclude fields that will be in the model dictionary, you can use the `exclude` parameter. The arguments are a list of
+Field objects or a list of fields as strings
+
+```python
+from models_manager import Model, Field
+
+
+class User(Model):
+    id = Field(json='id', category=int, default=1)
+    username = Field(json='username', category=str, default='some')
+
+
+User.manager.to_dict(exclude=[User.id])
+{'username': 'some'}
+
+User.manager.to_dict(exclude=['id'])
+{'username': 'some'}
+```
+
+Now we can see that the `id` field has been excluded from the model dictionary
+
+You can also exclude fields when creating an object
+
+```python
+from models_manager import Model, Field
+
+
+class User(Model):
+    id = Field(json='id', category=int, default=1)
+    username = Field(json='username', category=str, default='some')
+
+
+user = User(exclude_dict=[User.id])
+user.manager.to_dict()
+{'username': 'some'}
+
+user = User(exclude_dict=['id'])
+user.manager.to_dict()
+{'username': 'some'}
+```
+
+If you specify the fields to be excluded as strings, then you must specify their format in `json`

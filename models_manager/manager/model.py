@@ -94,3 +94,6 @@ class Model(metaclass=Meta):
 
     def __str__(self):
         return f'<Model: {self.__class__.__name__}>'
+
+    def __getitem__(self, item):
+        return self.__dict__[item]
