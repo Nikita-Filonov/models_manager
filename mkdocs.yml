@@ -5,6 +5,7 @@ nav:
       - Inheritance: models/inheritance.md
       - Json: models/json.md
       - Dict: models/dict.md
+      - Negative dict: models/negative_dict.md
       - Object model: models/object.md
       - Annotation: models/annotation.md
   - Schema:
