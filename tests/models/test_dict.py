@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from models_manager import Field
@@ -113,3 +115,22 @@ class TestDict:
         negative_payload = self.random_model.to_dict_with_empty_string_fields(fields=[field])
 
         assert negative_payload[field.json] == ''
+
+    def test_to_lazy_dict(self):
+        assert self.random_model.to_lazy_dict() == self.random_model.to_lazy_dict()
+
+    def test_to_dump(self):
+        payload_dict = self.model.to_dict()
+        payload_dump = self.model.to_dump()
+
+        assert json.dumps(payload_dict) == payload_dump
+
+    @pytest.mark.parametrize('payload, fields', [
+        (random_model.to_dict(), [DefaultModel.email]),
+        (random_model.to_dict(), [DefaultModel.email, DefaultModel.id]),
+        (random_model.to_dict(), [DefaultModel.email, DefaultModel.id, DefaultModel.first_name]),
+    ])
+    def test_to_dict_with_non_unique_fields(self, payload, fields):
+        non_unique_payload = self.model.to_dict_with_non_unique_fields(payload=payload, fields=fields)
+
+        assert all(non_unique_payload[field.json] == payload[field.json] for field in fields)

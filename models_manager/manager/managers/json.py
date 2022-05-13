@@ -1,8 +1,12 @@
+import json as json_lib
+from functools import lru_cache
 from typing import Union, List, Tuple, Iterator, Optional
 
 from models_manager import Field
 from models_manager.manager.managers.base import BaseManager
 from models_manager.utils import deprecated, get_json_from_fields
+
+GenericExcludeFields = Optional[List[Union[str, Field]]]
 
 
 class JsonManager(BaseManager):
@@ -29,7 +33,7 @@ class JsonManager(BaseManager):
     def ignore_validation(self, value):
         self._ignore_validation = value
 
-    def _field_without_empty_json(self, exclude=None) -> Iterator:
+    def _field_without_empty_json(self, exclude: GenericExcludeFields = None) -> Iterator:
         safe_exclude = exclude or []
         fields = self._fields_as_original()
         return filter(
@@ -54,7 +58,7 @@ class JsonManager(BaseManager):
             if value.json is not None
         }
 
-    def to_dict(self, json_key=True, exclude=None) -> dict:
+    def to_dict(self, json_key: bool = True, exclude: GenericExcludeFields = None) -> dict:
         safe_exclude = get_json_from_fields(exclude) or self.exclude_dict
         without_empty_json = self._field_without_empty_json(safe_exclude)
 
@@ -62,6 +66,13 @@ class JsonManager(BaseManager):
             (field.json if json_key else name): field.dict(json_key, self.ignore_validation)
             for name, field in without_empty_json
         }
+
+    @lru_cache(maxsize=None, typed=True)
+    def to_lazy_dict(self, json_key: bool = True, exclude: GenericExcludeFields = None) -> dict:
+        return self.to_dict(json_key=json_key, exclude=exclude)
+
+    def to_dump(self, json_key: bool = True, exclude: GenericExcludeFields = None) -> str:
+        return json_lib.dumps(self.to_dict(json_key=json_key, exclude=exclude))
 
     @deprecated('Use "to_dict_with_negative_max_length", "to_dict_with_negative_min_length" instead')
     def to_negative_json(self, fields: Union[List[Field], Tuple[Field]] = None, provider=None) -> dict:
@@ -88,7 +99,7 @@ class JsonManager(BaseManager):
             if value.json is not None
         }
 
-    def __to_dict_with_negative(self, method, fields=None):
+    def __to_dict_with_negative(self, method: str, fields: GenericExcludeFields = None):
         without_empty_json = self._field_without_empty_json()
         safe_fields = get_json_from_fields(fields)
 
@@ -101,14 +112,24 @@ class JsonManager(BaseManager):
             for name, field in without_empty_json
         }
 
-    def to_dict_with_negative_max_length(self, fields: Optional[List[Union[str, Field]]] = None):
+    def to_dict_with_negative_max_length(self, fields: GenericExcludeFields = None):
         return self.__to_dict_with_negative(method='max_length', fields=fields)
 
-    def to_dict_with_negative_min_length(self, fields: Optional[List[Union[str, Field]]] = None):
+    def to_dict_with_negative_min_length(self, fields: GenericExcludeFields = None):
         return self.__to_dict_with_negative(method='min_length', fields=fields)
 
-    def to_dict_with_null_fields(self, fields: Optional[List[Union[str, Field]]] = None):
+    def to_dict_with_null_fields(self, fields: GenericExcludeFields = None):
         return self.__to_dict_with_negative(method='null', fields=fields)
 
-    def to_dict_with_empty_string_fields(self, fields: Optional[List[Union[str, Field]]] = None):
+    def to_dict_with_empty_string_fields(self, fields: GenericExcludeFields = None):
         return self.__to_dict_with_negative(method='empty_string', fields=fields)
+
+    def to_dict_with_non_unique_fields(self, payload: dict, fields: GenericExcludeFields = None):
+        """Used to apply only some values from ``payload`` to given ``fields``."""
+        without_empty_json = self._field_without_empty_json()
+        safe_fields = get_json_from_fields(fields)
+
+        return {
+            field.json: (payload[field.json] if (field.json in safe_fields) else field.dict())
+            for name, field in without_empty_json
+        }
