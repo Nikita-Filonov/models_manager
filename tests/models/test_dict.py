@@ -1,9 +1,10 @@
 import json
+from itertools import zip_longest
 
 import pytest
 
 from models_manager import Field
-from models_manager.utils import random_string, random_number
+from models_manager.utils import random_string, random_number, deep_get
 from tests.model import DefaultModel, RandomModal, OuterModel, InnerModel, ListOuterModel, NestedOuterModel, \
     OptionalOuterModel
 
@@ -134,3 +135,28 @@ class TestDict:
         non_unique_payload = self.model.to_dict_with_non_unique_fields(payload=payload, fields=fields)
 
         assert all(non_unique_payload[field.json] == payload[field.json] for field in fields)
+
+    @pytest.mark.parametrize('payload, fields, keys', [
+        (
+                {**random_model.to_dict(), 'user': {'email': RandomModal.email.value}},
+                [DefaultModel.email],
+                [('user', 'email')]
+        ),
+        (
+                {
+                    **random_model.to_dict(),
+                    'user': {'email': RandomModal.email.value, 'firstName': RandomModal.first_name.value}
+                },
+                [DefaultModel.email, DefaultModel.first_name],
+                [('user', 'email'), ('user', 'firstName')]
+        ),
+    ])
+    def test_to_dict_with_non_unique_fields_and_nested_keys(self, payload, fields, keys):
+        non_unique_payload = self.model.to_dict_with_non_unique_fields(payload=payload, fields=fields, keys=keys)
+
+        assert all(
+            non_unique_payload[field.json] == deep_get(payload, *list_of_keys)
+            if list_of_keys
+            else non_unique_payload[field.json] == payload[field.json]
+            for field, list_of_keys in zip_longest(fields, keys or [])
+        )

@@ -232,3 +232,7 @@ def prettify_json(payload: dict):
 def to_snake_case(name):
     name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+
+
+def deep_get(dictionary: dict, *keys):
+    return functools.reduce(lambda d, key: d.get(key) if d else None, keys, dictionary)

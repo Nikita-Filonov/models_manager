@@ -1,10 +1,11 @@
 import json as json_lib
 from functools import lru_cache
+from itertools import zip_longest
 from typing import Union, List, Tuple, Iterator, Optional
 
 from models_manager import Field
 from models_manager.manager.managers.base import BaseManager
-from models_manager.utils import deprecated, get_json_from_fields
+from models_manager.utils import deprecated, get_json_from_fields, deep_get
 
 GenericExcludeFields = Optional[List[Union[str, Field]]]
 
@@ -109,7 +110,7 @@ class JsonManager(BaseManager):
                 if (field.json in safe_fields)
                 else field.dict()
             )
-            for name, field in without_empty_json
+            for _, field in without_empty_json
         }
 
     def to_dict_with_negative_max_length(self, fields: GenericExcludeFields = None):
@@ -124,12 +125,15 @@ class JsonManager(BaseManager):
     def to_dict_with_empty_string_fields(self, fields: GenericExcludeFields = None):
         return self.__to_dict_with_negative(method='empty_string', fields=fields)
 
-    def to_dict_with_non_unique_fields(self, payload: dict, fields: GenericExcludeFields = None):
+    def to_dict_with_non_unique_fields(
+            self,
+            payload: dict,
+            fields: GenericExcludeFields = None,
+            keys: List[List[str]] = None
+    ):
         """Used to apply only some values from ``payload`` to given ``fields``."""
-        without_empty_json = self._field_without_empty_json()
-        safe_fields = get_json_from_fields(fields)
-
-        return {
-            field.json: (payload[field.json] if (field.json in safe_fields) else field.dict())
-            for name, field in without_empty_json
+        non_unique_fields = {
+            field.json: deep_get(payload, *list_of_keys) if list_of_keys else payload[field.json]
+            for field, list_of_keys in zip_longest(fields, keys or [])
         }
+        return {**self.to_dict(exclude=fields), **non_unique_fields}
