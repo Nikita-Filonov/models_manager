@@ -1,3 +1,8 @@
+!!! warning
+
+    The `to_json` method has been deprecated and will be removed
+    in a future releases. Use [to_dict](./dict.md) instead
+
 Generating dynamic json object based on model. This is one of the most powerful feature of using models
 
 Generating json based on model

@@ -1,10 +1,13 @@
 import functools
+import json
 import logging
 import re
-from random import choice, randint
+import warnings
+from datetime import datetime, date, timedelta, time
+from random import choice, randint, uniform
 from string import ascii_letters, digits
 from time import sleep
-from typing import Union
+from typing import Union, Optional, List
 
 from faker import Faker
 
@@ -22,6 +25,10 @@ def random_string(start: int = 20, end: int = 50) -> str:
 
 def random_number(start: int = 5, end: int = 50) -> int:
     return randint(start, end)
+
+
+def random_decimal(start: Union[int, float] = 5, end: Union[int, float] = 50) -> float:
+    return uniform(start, end)
 
 
 def random_dict(keys_count=5, types=(str, int, bool), **kwargs) -> dict:
@@ -42,6 +49,22 @@ def random_list(elements=5, types=(str, int, bool), **kwargs):
     :return: random list
     """
     return fake.pylist(nb_elements=elements, value_types=types, **kwargs)
+
+
+def random_boolean(extra: Optional[Union[list, tuple]] = None):
+    return choice([True, False, *(extra or [])])
+
+
+def random_datetime(end_datetime: Union[date, datetime, timedelta, str, int, None] = None) -> datetime:
+    return fake.date_time(end_datetime=end_datetime)
+
+
+def random_date(end_datetime: datetime = None) -> date:
+    return fake.date_object(end_datetime=end_datetime)
+
+
+def random_time(end_datetime: Union[date, datetime, timedelta, str, int, None] = None) -> time:
+    return fake.time_object(end_datetime=end_datetime)
 
 
 def retry(times, exceptions, delay=2):
@@ -164,8 +187,52 @@ def normalize_model(model) -> str:
     return '_'.join([part.lower() for part in model_parts])
 
 
+def deprecated(message):
+    """
+    This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used.
+    """
+
+    def inner(func):
+        @functools.wraps(func)
+        def new_func(*args, **kwargs):
+            warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+            warnings.warn(
+                f"Call to deprecated function {func.__name__}. {message}",
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            warnings.simplefilter('default', DeprecationWarning)  # reset filter
+            return func(*args, **kwargs)
+
+        return new_func
+
+    return inner
+
+
 def lazy_setattr(instance, name, value, is_lazy=False):
     if is_lazy:
         return
 
     setattr(instance, name, value)
+
+
+def get_json_from_fields(fields: list) -> List[str]:
+    if fields is None:
+        return []
+
+    return [field if isinstance(field, str) else field.json for field in fields]
+
+
+def prettify_json(payload: dict):
+    return json.dumps(payload, indent=8, sort_keys=True)
+
+
+def to_snake_case(name):
+    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+
+
+def deep_get(dictionary: dict, *keys):
+    return functools.reduce(lambda d, key: d.get(key) if d else None, keys, dictionary)

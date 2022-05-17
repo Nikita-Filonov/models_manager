@@ -1,18 +1,22 @@
 from copy import deepcopy
 from functools import reduce
-from typing import Union, Dict
+from typing import Union, Dict, List, Any
 
-from models_manager import Field
-from models_manager.manager.manager import ModelManager
+from models_manager.manager.field.field import Field
+from models_manager.manager.managers.mixin import ManagerMixin
 
 
 class Meta(type):
+    CONFIG = 'Config'
+
     def __new__(mcs, name, bases, attrs):
         safe_name = mcs.resolve_name(name, attrs)
         safe_attrs = mcs.resolve_attrs(bases, attrs)
 
+        safe_attrs = mcs.resolve_config(safe_attrs, attrs.get(mcs.CONFIG))
+
         cls = type.__new__(mcs, name, bases, attrs)
-        cls.manager = ModelManager(safe_name, bases, **safe_attrs)
+        cls.manager = ManagerMixin(safe_name, bases, **safe_attrs)
 
         return cls
 
@@ -55,15 +59,31 @@ class Meta(type):
         extended_by: Union[Meta, None] = attrs.get('extended_by')
         return extended_by.__name__ if extended_by else name
 
+    @classmethod
+    def resolve_config(mcs, attrs: dict, config=None) -> Dict[str, Any]:
+        if config is None:
+            return attrs
+
+        return {key: value for key, value in attrs.items() if (key not in config.exclude_fields)}
+
 
 class Model(metaclass=Meta):
     database = None
     identity = 'id'
     extended_by = None
 
-    def __init__(self, **kwargs):
-        self.manager: ModelManager = deepcopy(self.manager)
+    def __init__(
+            self,
+            exclude_schema: List[Union[Field, str]] = None,
+            exclude_dict: List[Union[Field, str]] = None,
+            ignore_validation=False,
+            **kwargs
+    ):
+        self.manager: ManagerMixin = deepcopy(self.manager)
         self.manager.apply_values(**kwargs)
+        self.manager.exclude_schema = exclude_schema
+        self.manager.exclude_dict = exclude_dict
+        self.manager.ignore_validation = ignore_validation
 
         fields: Dict[str, Field] = self.manager.fields(json_key=False)
         self.__apply_to_fields(fields)
@@ -71,3 +91,9 @@ class Model(metaclass=Meta):
     def __apply_to_fields(self, field: Dict[str, Field]):
         for field_name, field in field.items():
             setattr(self, field_name, field)
+
+    def __str__(self):
+        return f'<Model: {self.__class__.__name__}>'
+
+    def __getitem__(self, item):
+        return self.__dict__[item]

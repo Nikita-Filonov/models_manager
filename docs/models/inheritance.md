@@ -1,3 +1,6 @@
+Model extension
+---
+
 Continuing with the user model example, let's imagine that we need to extend this model
 
 ```python
@@ -121,3 +124,49 @@ SpecialUser.manager.to_json
 ```
 
 This way we can overwrite the attributes of the parent model
+
+
+Field exclusion
+---
+
+
+Using the user as an example, let's look at how to exclude model fields
+
+```python
+from models_manager import Model, Field
+
+
+class ComplicatedUser(Model):
+    id = Field(default=1, json='id', category=int)
+    username = Field(default='some', json='username')
+    email = Field(default='other', json='email')
+    details = Field(default={}, json='details', category=dict)
+
+
+class SimpleUser(ComplicatedUser):
+    class Config:
+        exclude_fields = ['details', 'email']
+```
+
+We created the `ComplicatedUser` model and inherited the `SimpleUser` model from it, in which the email, details fields
+were excluded. Let's now serialize the model and look at the dictionary
+
+```python hl_lines="11 12 13 14 15 16 17"
+from models_manager import Model, Field
+
+
+class ComplicatedUser(Model):
+    id = Field(default=1, json='id', category=int)
+    username = Field(default='some', json='username')
+    email = Field(default='other', json='email')
+    details = Field(default={}, json='details', category=dict)
+
+
+class SimpleUser(ComplicatedUser):
+    class Config:
+        exclude_fields = ['details', 'email']
+
+
+SimpleUser.manager.to_dict()
+{'id': 1, 'username': 'some'}
+```

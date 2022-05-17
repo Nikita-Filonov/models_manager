@@ -44,7 +44,7 @@ class Provider(ABC):
         return
 
 
-class NegativeValuesProvider(Provider):
+class NegativeValuesProviderDeprecated(Provider):
     """
     Common provider with default methods for getting negative values
 

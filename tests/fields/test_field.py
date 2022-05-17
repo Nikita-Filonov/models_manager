@@ -1,28 +1,55 @@
+from datetime import datetime, date, time, timedelta
+from typing import Optional, List, Dict, Union, Tuple
+
 import pytest
+from jsonschema.exceptions import ValidationError
 
 from models_manager import Field
-from models_manager.manager.exeptions import FieldException
-from models_manager.manager.field.typing import SUPPORTED_TYPES
 from models_manager.utils import random_string
-from tests.model import DefaultChoices
+from tests.model import DefaultChoices, DefaultModel
 
 
 @pytest.mark.field
 class TestField:
 
-    @pytest.mark.parametrize('type_name, default', [
-        (category, {} if issubclass(category, dict) else '100')
-        for category in SUPPORTED_TYPES
+    @pytest.mark.parametrize('category, default', [
+        (int, 1),
+        (str, 'some'),
+        (list, [1, 2, 3]),
+        (tuple, [1, 2, 3]),
+        (dict, {1: 2}),
+        (List[int], [1, 2, 3]),
+        (Dict[str, bool], {'some': True}),
+        (Dict[str, int], {'some': 1}),
+        (Dict[str, Union[str, int]], {'some': 'other', 'another': 1}),
+        (Union[str, int], 1),
+        (Union[str, int], 'some'),
+        (Optional[str], None),
+        (Optional[str], 'some')
     ])
-    def test_field_category(self, type_name, default):
-        field = Field(default=default, category=type_name)
+    def test_field_category(self, category, default):
+        field = Field(default=default, category=category)
 
-        assert field.category == type_name
-        assert field.value == type_name(field.default)
+        assert field.category == category
+        assert field.value == default
 
-    def test_field_with_not_supported_category(self):
-        field = Field(default=random_string(), category=Field)
-        with pytest.raises(FieldException):
+    @pytest.mark.parametrize('category, default', [
+        (int, 'str'),
+        (str, 1),
+        (list, {1: 2}),
+        (tuple, 'some'),
+        (List[int], ['str', 'some']),
+        (Dict[str, bool], {'some': 1}),
+        (Dict[str, int], {'some': 'other'}),
+        (Dict[str, Union[str, int]], {'some': True, 'another': []}),
+        (Union[str, int], True),
+        (Union[str, int], {1: 2}),
+        (Optional[str], {1: 2}),
+        (Optional[str], 1)
+    ])
+    def test_field_for_category_raise_validation_error(self, category, default):
+        field = Field(default=default, category=category)
+        with pytest.raises(ValidationError):
             field.value
 
     def test_field_value_getter(self):
@@ -48,7 +75,7 @@ class TestField:
     def test_field_choice_with_not_supported_choice(self):
         field = Field(json='some', default=DefaultChoices.EXPERT.value, choices=DefaultChoices.to_list())
 
-        with pytest.raises(FieldException):
+        with pytest.raises(ValidationError):
             field.value = random_string()
 
     def test_callable_as_default(self):
@@ -58,16 +85,123 @@ class TestField:
         assert callable(field.default)
 
     @pytest.mark.parametrize('arguments, schema', [
-        ({'max_length': 255, 'category': str}, {'type': 'string', 'minLength': 0, 'maxLength': 255}),
-        ({'category': str, 'null': True}, {'type': ['string', 'null']}),
+        (
+                {'max_length': 255, 'min_length': 100, 'category': str},
+                {'maxLength': 255, 'minLength': 100, 'type': 'string'}
+        ),
+        ({'category': int, 'le': 0, 'gt': 10}, {'exclusiveMinimum': 10, 'maximum': 0, 'type': 'number'}),
+        ({'category': int, 'lt': 0, 'gt': 10}, {'exclusiveMaximum': 0, 'exclusiveMinimum': 10, 'type': 'number'}),
+        ({'category': int, 'le': 0, 'ge': 10}, {'maximum': 0, 'minimum': 10, 'type': 'number'}),
+        ({'category': int, 'le': 0, 'gt': 10}, {'exclusiveMinimum': 10, 'maximum': 0, 'type': 'number'}),
         ({'category': int}, {'type': 'number'}),
         ({'category': float}, {'type': 'number'}),
-        ({'category': list}, {'type': 'array'}),
+        ({'category': list}, {'type': 'array', 'items': {}}),
         ({'category': tuple}, {'type': 'array'}),
         ({'category': dict}, {'type': 'object'}),
         ({'category': bool}, {'type': 'boolean'}),
         ({'category': None}, {'type': 'null'}),
+        ({'category': Optional[int]}, {'anyOf': [{'type': 'number'}, {'type': 'null'}]}),
+        ({'category': Optional[str]}, {'anyOf': [{'type': 'string'}, {'type': 'null'}]}),
+        ({'category': Optional[list]}, {'anyOf': [{'type': 'array'}, {'type': 'null'}]}),
+        ({'category': datetime}, {'type': 'string', 'format': 'date-time'}),
+        ({'category': date}, {'type': 'string', 'format': 'date'}),
+        ({'category': time}, {'type': 'string', 'format': 'time'}),
+        ({'category': timedelta}, {'type': 'string', 'format': 'time-delta'}),
+        ({'category': List[str]}, {'type': 'array', 'items': {'type': 'string'}}),
+        (
+                {'category': Dict[str, Union[int, bool]]},
+                {'type': 'object', 'additionalProperties': {'anyOf': [{'type': 'number'}, {'type': 'boolean'}]}}
+        ),
+        ({'category': Union[str, int, bool]}, {'anyOf': [{'type': 'string'}, {'type': 'number'}, {'type': 'boolean'}]}),
+        (
+                {'category': Tuple[int, str, list]},
+                {
+                    'type': 'array',
+                    'minItems': 3,
+                    'maxItems': 3,
+                    'items': [{'type': 'number'}, {'type': 'string'}, {'type': 'array'}]
+                }
+        ),
+        (
+                {'category': DefaultModel},
+                {
+                    'properties': {
+                        'email': {'type': 'string'},
+                        'firstName': {'type': 'string'},
+                        'id': {'type': 'number'}
+                    },
+                    'required': ['id', 'firstName', 'email'],
+                    'title': 'DefaultModel',
+                    'type': 'object'
+                }
+        ),
+        (
+                {'category': List[DefaultModel]},
+                {
+                    'items': {
+                        'properties': {
+                            'email': {'type': 'string'},
+                            'firstName': {'type': 'string'},
+                            'id': {'type': 'number'}
+                        },
+                        'required': ['id', 'firstName', 'email'],
+                        'title': 'DefaultModel',
+                        'type': 'object'
+                    },
+                    'type': 'array'
+                }
+        ),
+        (
+                {'category': Dict[str, DefaultModel]},
+                {
+                    'additionalProperties': {
+                        'title': 'DefaultModel',
+                        'type': 'object',
+                        'properties': {
+                            'id': {'type': 'number'},
+                            'firstName': {'type': 'string'},
+                            'email': {'type': 'string'}
+                        },
+                        'required': ['id', 'firstName', 'email']
+                    },
+                    'type': 'object'
+                }
+        )
     ], ids=lambda param: str(param))
     def test_field_get_schema(self, arguments, schema):
         field = Field(json='some', **arguments)
         assert field.get_schema == schema
+
+    @pytest.mark.parametrize(
+        'default, category, expected',
+        [
+            (1, int, 1),
+            ([1, 2, 3], List[int], [1, 2, 3]),
+            ([{'some': 1}], List[Dict[str, int]], [{'some': 1}]),
+            ({'some': 1}, Dict[str, int], {'some': 1}),
+            (DefaultModel, DefaultModel, {
+                DefaultModel.id.json: DefaultModel.id.default,
+                DefaultModel.first_name.json: DefaultModel.first_name.default,
+                DefaultModel.email.json: DefaultModel.email.default
+            }),
+            ([DefaultModel], List[DefaultModel], [{
+                DefaultModel.id.json: DefaultModel.id.default,
+                DefaultModel.first_name.json: DefaultModel.first_name.default,
+                DefaultModel.email.json: DefaultModel.email.default
+            }]),
+            (datetime(year=2022, month=4, day=30), datetime, '2022-04-30 00:00:00'),
+            (date(year=2022, month=4, day=30), date, '2022-04-30'),
+            (time(hour=1, minute=1, second=1, microsecond=1), time, '01:01:01.000001'),
+            (timedelta(minutes=30), timedelta, '0:30:00')
+        ]
+    )
+    def test_field_get_dict(self, default, category, expected):
+        field = Field(default=default, category=category)
+
+        assert field.dict() == expected
+
+    @pytest.mark.parametrize('optional', [True, False])
+    def test_field_optionality(self, optional):
+        field = Field(optional=optional)
+
+        assert field.is_optional == optional

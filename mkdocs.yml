@@ -4,6 +4,9 @@ nav:
       - Basic model: models/models.md
       - Inheritance: models/inheritance.md
       - Json: models/json.md
+      - Dict: models/dict.md
+      - Negative dict: models/negative_dict.md
+      - Object model: models/object.md
       - Annotation: models/annotation.md
   - Schema:
       - Basic: schema/basic.md
@@ -12,6 +15,8 @@ nav:
       - Nested object: schema/nested_object.md
       - Nested array: schema/nested_array.md
       - Enums: schema/enum.md
+      - Advanced usage: schema/advanced.md
+      - With models: schema/with_models.md
   - Field: field.md
   - Providers: providers.md
   - Examples: examples.md
