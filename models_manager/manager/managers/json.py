@@ -114,6 +114,11 @@ class JsonManager(BaseManager):
         }
 
     def to_dict_with_negative_max_length(self, fields: GenericExcludeFields = None):
+        """
+        :param fields: List of ``Field`` objects or list of field names in json as strings
+        :return: Will return dictionary with fields converted to json,
+        where values will negative string more that possible field max length
+        """
         return self.__to_dict_with_negative(method='max_length', fields=fields)
 
     def to_dict_with_negative_min_length(self, fields: GenericExcludeFields = None):
