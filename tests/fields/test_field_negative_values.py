@@ -1,3 +1,5 @@
+from typing import Optional
+
 import pytest
 
 from models_manager import Field
@@ -6,13 +8,23 @@ from models_manager.manager.exeptions import NegativeValuesException
 
 @pytest.mark.field_negative_values
 class TestFieldNegativeValues:
-    @pytest.mark.parametrize('attributes', [{'category': int, 'max_length': 100}, {'category': str}])
+    @pytest.mark.parametrize('attributes', [
+        {'category': int, 'max_length': 100},
+        {'category': str},
+        {'category': Optional[str]},
+        {'category': Optional[int]}
+    ])
     def test_field_negative_max_length_with_wrong_category(self, attributes):
         field = Field(**attributes)
         with pytest.raises(NegativeValuesException):
             field.negative.max_length()
 
-    @pytest.mark.parametrize('attributes', [{'category': int, 'min_length': 100}, {'category': str}])
+    @pytest.mark.parametrize('attributes', [
+        {'category': int, 'min_length': 100},
+        {'category': str},
+        {'category': Optional[str]},
+        {'category': Optional[int]}
+    ])
     def test_field_negative_min_length_with_wrong_category(self, attributes):
         field = Field(**attributes)
         with pytest.raises(NegativeValuesException):
@@ -54,25 +66,45 @@ class TestFieldNegativeValues:
         assert isinstance(field.negative.le(), float)
         assert field.negative.le() >= le
 
-    @pytest.mark.parametrize('attributes', [{'category': str, 'lt': 100}, {'category': int}])
+    @pytest.mark.parametrize('attributes', [
+        {'category': str, 'lt': 100},
+        {'category': int},
+        {'category': Optional[str]},
+        {'category': Optional[int]}
+    ])
     def test_field_negative_lt_with_wrong_category(self, attributes):
         field = Field(**attributes)
         with pytest.raises(NegativeValuesException):
             field.negative.lt()
 
-    @pytest.mark.parametrize('attributes', [{'category': str, 'gt': 100}, {'category': int}])
+    @pytest.mark.parametrize('attributes', [
+        {'category': str, 'gt': 100},
+        {'category': int},
+        {'category': Optional[str]},
+        {'category': Optional[int]}
+    ])
     def test_field_negative_gt_with_wrong_category(self, attributes):
         field = Field(**attributes)
         with pytest.raises(NegativeValuesException):
             field.negative.gt()
 
-    @pytest.mark.parametrize('attributes', [{'category': str, 'le': 100}, {'category': int}])
+    @pytest.mark.parametrize('attributes', [
+        {'category': str, 'le': 100},
+        {'category': int},
+        {'category': Optional[str]},
+        {'category': Optional[int]}
+    ])
     def test_field_negative_le_with_wrong_category(self, attributes):
         field = Field(**attributes)
         with pytest.raises(NegativeValuesException):
             field.negative.le()
 
-    @pytest.mark.parametrize('attributes', [{'category': str, 'ge': 100}, {'category': int}])
+    @pytest.mark.parametrize('attributes', [
+        {'category': str, 'ge': 100},
+        {'category': int},
+        {'category': Optional[str]},
+        {'category': Optional[int]}
+    ])
     def test_field_negative_ge_with_wrong_category(self, attributes):
         field = Field(**attributes)
         with pytest.raises(NegativeValuesException):
