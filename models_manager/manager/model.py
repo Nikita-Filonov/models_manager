@@ -1,13 +1,18 @@
 from copy import deepcopy
 from functools import reduce
-from typing import Union, Dict, List, Any
+from typing import Any, Dict, List, Optional, Union
 
 from models_manager.manager.field.field import Field
 from models_manager.manager.managers.mixin import ManagerMixin
 
 
+class Config:
+    exclude_fields: List[str]
+    additional_properties: bool
+
+
 class Meta(type):
-    CONFIG = 'Config'
+    CONFIG = "Config"
 
     def __new__(mcs, name, bases, attrs):
         safe_name = mcs.resolve_name(name, attrs)
@@ -56,28 +61,43 @@ class Meta(type):
         Checks if model is extended by other model and if yes, then
         we should use ``extended_by`` model name for queries
         """
-        extended_by: Union[Meta, None] = attrs.get('extended_by')
+        extended_by: Union[Meta, None] = attrs.get("extended_by")
         return extended_by.__name__ if extended_by else name
 
     @classmethod
-    def resolve_config(mcs, attrs: dict, config=None) -> Dict[str, Any]:
+    def resolve_config(
+        mcs, attrs: dict, config: Optional[Config] = None
+    ) -> Dict[str, Any]:
         if config is None:
             return attrs
 
-        return {key: value for key, value in attrs.items() if (key not in config.exclude_fields)}
+        if hasattr(config, "exclude_fields"):
+            attrs = {
+                key: value
+                for key, value in attrs.items()
+                if (key not in config.exclude_fields)
+            }
+
+        if hasattr(config, "additional_properties"):
+            attrs = {
+                **attrs,
+                "schema_additional_properties": config.additional_properties,
+            }
+
+        return attrs
 
 
 class Model(metaclass=Meta):
     database = None
-    identity = 'id'
+    identity = "id"
     extended_by = None
 
     def __init__(
-            self,
-            exclude_schema: List[Union[Field, str]] = None,
-            exclude_dict: List[Union[Field, str]] = None,
-            ignore_validation=False,
-            **kwargs
+        self,
+        exclude_schema: List[Union[Field, str]] = None,
+        exclude_dict: List[Union[Field, str]] = None,
+        ignore_validation=False,
+        **kwargs,
     ):
         self.manager: ManagerMixin = deepcopy(self.manager)
         self.manager.apply_values(**kwargs)
@@ -93,7 +113,7 @@ class Model(metaclass=Meta):
             setattr(self, field_name, field)
 
     def __str__(self):
-        return f'<Model: {self.__class__.__name__}>'
+        return f"<Model: {self.__class__.__name__}>"
 
     def __getitem__(self, item):
         return self.__dict__[item]

@@ -1,0 +1,10 @@
+{
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.defaultFormatter": null,
+  "python.autoComplete.extraPaths": [
+  
+  ],
+  "python.formatting.provider": "black",
+  "python.analysis.extraPaths": []
+}

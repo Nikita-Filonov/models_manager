@@ -1,16 +1,18 @@
 from itertools import tee
-from typing import Dict, Union, List
+from typing import Dict, List, Union
 
 from models_manager.manager.managers.base import BaseManager
 from models_manager.utils import get_json_from_fields
 
 
 class SchemaManager(BaseManager):
-
     def __init__(self, model, mro, **kwargs):
         super().__init__(model, mro, **kwargs)
 
         self._exclude_schema = None
+        self._schema_additional_properties = kwargs.get(
+            "schema_additional_properties", True
+        )
 
     @property
     def exclude_schema(self):
@@ -66,23 +68,36 @@ class SchemaManager(BaseManager):
         validate(instance=json, schema=schema)
         """
         original_fields = self._fields_as_original().items()
-        properties, required = tee(filter(lambda args: args[1].json not in self.exclude_schema, original_fields))
+        properties, required = tee(
+            filter(
+                lambda args: args[1].json not in self.exclude_schema, original_fields
+            )
+        )
 
-        return {
+        schema = {
             "title": self._model,
             "type": "object",
             "properties": {
-                field.json: field.get_schema for _, field in properties
+                field.json: field.get_schema
+                for _, field in properties
                 if field.json is not None
             },
             "required": [
-                field.json for _, field in required
+                field.json
+                for _, field in required
                 if (field.json is not None) and (not field.is_optional)
-            ]
+            ],
         }
 
+        if not self._schema_additional_properties:
+            schema["additionalProperties"] = False
+
+        return schema
+
     @property
-    def to_array_schema(self) -> Dict[str, Union[str, Dict[str, Union[str, dict, List[str]]]]]:
+    def to_array_schema(
+        self,
+    ) -> Dict[str, Union[str, Dict[str, Union[str, dict, List[str]]]]]:
         """
         Can be used to check schema in list.
 
