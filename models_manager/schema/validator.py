@@ -1,6 +1,6 @@
 from typing import Iterable, Type
 
-from models_manager.manager.exeptions import SchemaException
+from models_manager.manager.exceptions import SchemaException
 from models_manager.manager.field.typing import GenericChoices
 from models_manager.schema.schema_template import SchemaTemplate
 

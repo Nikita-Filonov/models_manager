@@ -1,5 +1,5 @@
 from models_manager.constants import TYPE_NAMES
-from models_manager.manager.exeptions import SchemaException
+from models_manager.manager.exceptions import SchemaException
 from models_manager.manager.field.typing import GenericChoices
 from models_manager.manager.model import Meta
 from models_manager.schema.context import SchemaContext

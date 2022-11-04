@@ -3,7 +3,7 @@ from typing import Union, Optional, Dict, List, Any
 import pytest
 
 from models_manager import Field
-from models_manager.manager.exeptions import SchemaException
+from models_manager.manager.exceptions import SchemaException
 
 
 @pytest.mark.schema_validation
