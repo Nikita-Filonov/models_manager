@@ -1,6 +1,6 @@
 import logging
 
-from models_manager.manager.exeptions import ModelOperationError, QuerySetOperationError
+from models_manager.manager.exceptions import ModelOperationError, QuerySetOperationError
 from models_manager.manager.query.builder import get_query
 from models_manager.utils import serializer, normalize_model, binding, dump_value
 

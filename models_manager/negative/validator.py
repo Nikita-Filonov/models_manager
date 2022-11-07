@@ -1,6 +1,6 @@
 from typing import Type
 
-from models_manager.manager.exeptions import NegativeValuesException
+from models_manager.manager.exceptions import NegativeValuesException
 from models_manager.manager.field.typing import GenericChoices, GenericCategories
 from models_manager.schema.schema_template import SchemaTemplate
 from models_manager.schema.validator import SchemaValidator

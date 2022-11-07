@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from models_manager.constants import TYPE_NAMES
-from models_manager.manager.exeptions import ProviderException
+from models_manager.manager.exceptions import ProviderException
 from models_manager.manager.field.typing import GenericCategories
 from models_manager.utils import random_number, random_string
 

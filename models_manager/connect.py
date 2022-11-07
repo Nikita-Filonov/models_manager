@@ -4,7 +4,7 @@ from typing import Optional
 import psycopg2
 from psycopg2 import OperationalError
 
-from models_manager.manager.exeptions import DatabaseNameError
+from models_manager.manager.exceptions import DatabaseNameError
 from models_manager.utils import retry
 
 logging.basicConfig(level=logging.INFO)

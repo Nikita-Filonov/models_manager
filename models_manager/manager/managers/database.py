@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List, Union
 
 from models_manager.connect import Connect
-from models_manager.manager.exeptions import ModelDoesNotExists, ModelOperationError
+from models_manager.manager.exceptions import ModelDoesNotExists, ModelOperationError
 from models_manager.manager.field.field import Field
 from models_manager.manager.managers.base import BaseManager
 from models_manager.manager.query.builder import get_query

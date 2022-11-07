@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import Union, Any
 
 from models_manager import Model
-from models_manager.manager.exeptions import JsonException
+from models_manager.manager.exceptions import JsonException
 from models_manager.manager.model import Meta
 from models_manager.schema.schema_template import SchemaTemplate
 from models_manager.schema.validator import SchemaValidator

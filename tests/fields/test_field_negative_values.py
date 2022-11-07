@@ -3,7 +3,7 @@ from typing import Optional
 import pytest
 
 from models_manager import Field
-from models_manager.manager.exeptions import NegativeValuesException
+from models_manager.manager.exceptions import NegativeValuesException
 
 
 @pytest.mark.field_negative_values
